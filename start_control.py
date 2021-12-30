@@ -7,8 +7,8 @@ import logging
 
 TEMPHIGH = 25
 TEMPLOW = 22
-HUMHIGH = 90
-HUMLOW = 85
+HUMHIGH = 75
+HUMLOW = 70
 
 def _process_temp(msg):
     msg = msg.split(',')
@@ -26,19 +26,27 @@ def _process_temp(msg):
     
 
 def _process_humi(msg):
-    humidifier = airhumidifier_mjjsq(ip="192.168.0.18", token="7c3d81298bac616875ed927108087c57")
+    humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip="192.168.0.18", token="7c3d81298bac616875ed927108087c57")
+    is_on = humidifier.status().is_on
+    '''
+    for idx, stat in enumerate(status):
+        if "on" in stat:
+            stat = stat.split("=")
+            is_on = bool(stat[1])
+            break
+    '''
     msg = msg.split(',')
     total = 0
     for i in range(len(msg)):
         logging.info("Sensor: {}, Value: {}".format(i, msg[i]))
         total += float(msg[i])
     avg = total/len(msg)
-    if avg > HUMHIGH:
+    if avg > HUMHIGH and is_on:
         # turn off humidifier
         humidifier.off()
-    elif avg < HUMLOW:
+    elif avg < HUMLOW and not is_on:
         # turn on humidifier
-        humidifer.on()
+        humidifier.on()
     
 
 def _on_connect(client, userdata, flags, rc):
