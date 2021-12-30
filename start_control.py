@@ -5,6 +5,8 @@ from miio import airhumidifier_mjjsq, heater_miot
 from datetime import datetime
 import logging
 
+logging.basicConfig(level=logging.INFO)
+
 TEMPHIGH = 25
 TEMPLOW = 22
 HUMHIGH = 75
