@@ -19,9 +19,9 @@ def _process_temp(msg):
         logging.info("Sensor: {}, Value: {}".format(i, msg[i]))
         total += float(msg[i])
     avg = total/len(msg)
-    if avg > TEMPHIGH:
+    if avg > TEMPHIGH and is_on:
         heater.off()
-    elif avg < TEMPLOW:
+    elif avg < TEMPLOW and not is_on:
         heater.on()
     
 
