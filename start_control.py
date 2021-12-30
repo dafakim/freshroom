@@ -1,7 +1,7 @@
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 import os
-from miio import airhumidifier_mjjsq
+from miio import airhumidifier_mjjsq, heater_miot
 from datetime import datetime
 import logging
 
@@ -11,6 +11,8 @@ HUMHIGH = 75
 HUMLOW = 70
 
 def _process_temp(msg):
+    heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
+    is_on = heater.status().is_on
     msg = msg.split(',')
     total = 0
     for i in range(len(msg)):
@@ -18,23 +20,14 @@ def _process_temp(msg):
         total += float(msg[i])
     avg = total/len(msg)
     if avg > TEMPHIGH:
-        # turn off heater
-        pass
+        heater.off()
     elif avg < TEMPLOW:
-        # turn on heater
-        pass
+        heater.on()
     
 
 def _process_humi(msg):
-    humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip="192.168.0.18", token="7c3d81298bac616875ed927108087c57")
+    humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip=os.getenv('HUMIDIFIER_IP'), token=os.getenv('HUMIDIFIER_TOKEN'))
     is_on = humidifier.status().is_on
-    '''
-    for idx, stat in enumerate(status):
-        if "on" in stat:
-            stat = stat.split("=")
-            is_on = bool(stat[1])
-            break
-    '''
     msg = msg.split(',')
     total = 0
     for i in range(len(msg)):
