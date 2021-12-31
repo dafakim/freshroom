@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 from miio import airhumidifier_mjjsq, heater_miot
+import os
 
 load_dotenv()
 heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
