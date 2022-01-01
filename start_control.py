@@ -5,12 +5,12 @@ from miio import airhumidifier_mjjsq, heater_miot
 from datetime import datetime
 import logging
 
-logging.basicConfig(file = 'values.log', level=logging.INFO)
+logging.basicConfig(filename = 'values.log', level=logging.INFO)
 
 TEMPHIGH = 25
 TEMPLOW = 22
-HUMHIGH = 75
-HUMLOW = 70
+HUMHIGH = 85
+HUMLOW = 80
 
 def _process_temp(msg):
     heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
@@ -30,6 +30,13 @@ def _process_temp(msg):
 def _process_humi(msg):
     humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip=os.getenv('HUMIDIFIER_IP'), token=os.getenv('HUMIDIFIER_TOKEN'))
     is_on = humidifier.status().is_on
+    if humidifier.status().no_water:
+        logging.error("HUMIDIFIER NO WATER, PLEASE FILL ASAP")
+        if is_on:
+            humidifier.off()
+        else:
+            pass
+        return -1
     msg = msg.split(',')
     total = 0
     for i in range(len(msg)):
