@@ -5,12 +5,12 @@ from miio import airhumidifier_mjjsq, heater_miot
 from datetime import datetime
 import logging
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(filename = 'values.log', level=logging.INFO)
 
 TEMPHIGH = 25
-TEMPLOW = 24
-HUMHIGH = 90
-HUMLOW = 88
+TEMPLOW = 22
+HUMHIGH = 85
+HUMLOW = 80
 
 def _process_temp(msg):
     heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
@@ -18,7 +18,7 @@ def _process_temp(msg):
     msg = msg.split(',')
     total = 0
     for i in range(len(msg)):
-        logging.info("Sensor: {}, Value: {}".format(i, msg[i]))
+        logging.debug("Sensor: {}, Value: {}".format(i, msg[i]))
         total += float(msg[i])
     avg = total/len(msg)
     if avg > TEMPHIGH and is_on:
@@ -30,10 +30,17 @@ def _process_temp(msg):
 def _process_humi(msg):
     humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip=os.getenv('HUMIDIFIER_IP'), token=os.getenv('HUMIDIFIER_TOKEN'))
     is_on = humidifier.status().is_on
+    if humidifier.status().no_water:
+        logging.error("HUMIDIFIER NO WATER, PLEASE FILL ASAP")
+        if is_on:
+            humidifier.off()
+        else:
+            pass
+        return -1
     msg = msg.split(',')
     total = 0
     for i in range(len(msg)):
-        logging.info("Sensor: {}, Value: {}".format(i, msg[i]))
+        logging.debug("Sensor: {}, Value: {}".format(i, msg[i]))
         total += float(msg[i])
     avg = total/len(msg)
     if avg > HUMHIGH and is_on:
@@ -53,7 +60,7 @@ def _on_message(client, userdata, msg):
     location = topic[0]
     sensor_type = topic[1]
     decoded_msg = msg.payload.decode('utf-8')
-    logging.debug("{}\nLOCATION: {}\nSENSOR: {}\nPAYLOAD: {}".format(datetime.now(), location, sensor_type, decoded_msg))
+    logging.info("{}\nLOCATION: {}\nSENSOR: {}\nPAYLOAD: {}".format(datetime.now(), location, sensor_type, decoded_msg))
     if "temperature" in sensor_type:
         _process_temp(decoded_msg)
     elif "humidity" in sensor_type:
