@@ -8,9 +8,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 TEMPHIGH = 25
-TEMPLOW = 22
-HUMHIGH = 75
-HUMLOW = 70
+TEMPLOW = 24
+HUMHIGH = 90
+HUMLOW = 88
 
 def _process_temp(msg):
     heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
