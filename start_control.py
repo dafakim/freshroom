@@ -4,6 +4,7 @@ import os
 from miio import airhumidifier_mjjsq, heater_miot
 from datetime import datetime
 import logging
+import slack_notifier as sn
 
 logging.basicConfig(filename = 'values.log', level=logging.INFO)
 
@@ -61,6 +62,10 @@ def _on_message(client, userdata, msg):
     sensor_type = topic[1]
     decoded_msg = msg.payload.decode('utf-8')
     logging.info("{}\nLOCATION: {}\nSENSOR: {}\nPAYLOAD: {}".format(datetime.now(), location, sensor_type, decoded_msg))
+    msg = decoded_msg.split(',')
+    if msg[0] == msg[1]:
+        if int(msg[0]) == 0:
+            sn.send_notification("Zero Data Notification", "Receieved 0 at following sensor\nLOCATION: {}\nSENSOR: {}".format(location, sensor_type))
     if "temperature" in sensor_type:
         _process_temp(decoded_msg)
     elif "humidity" in sensor_type:
