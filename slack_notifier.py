@@ -7,14 +7,13 @@ def send_notification(title, msg):
 	"username": "StatusBot",
 	"icon_emoji": ":warning:",
 	"attachments": [
-	{
-		"fields": [
 		{
-			"title": title,
-			"value": msg,
-			"short": "false",
-		}]
-	}]
+		"fields": [
+			{
+				"title": title,
+				"value": msg,
+				"short": "false",
+			}]
+			}]
+		}
 	response = requests.post(url, data=json.dumps(slack_data))
-
-}
