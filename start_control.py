@@ -91,7 +91,7 @@ def _on_message(client, userdata, msg):
     logging.info("{}\nLOCATION: {}\nSENSOR: {}\nPAYLOAD: {}".format(datetime.now(), location, sensor_type, decoded_msg))
     msg = decoded_msg.split(',')
     if msg[0] == msg[1]:
-        if int(msg[0]) == 0:
+        if int(float(msg[0])) == 0:
             sn.send_notification("Zero Data Notification", "Receieved 0 at following sensor\nLOCATION: {}\nSENSOR: {}".format(location, sensor_type))
     # disable temperature humidity controls until setup finished
     if "temperature" in sensor_type:
