@@ -1,6 +1,6 @@
 import requests
 import json
-url = "https://hooks.slack.com/services/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"
+url = "https://hooks.slack.com/services/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"
 
 def send_notification(title, msg):
 	slack_data = {

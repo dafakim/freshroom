@@ -5,6 +5,7 @@ from miio import airhumidifier_mjjsq, heater_miot
 from datetime import datetime
 import logging
 import slack_notifier as sn
+import db_manager as dbm
 
 logging.basicConfig(filename = 'values.log', level=logging.INFO)
 
@@ -14,9 +15,22 @@ HUMHIGH = 90
 HUMLOW = 88
 
 def _process_temp(msg):
+    msg = msg.split(',')
+    time = datetime.strftime("%Y-%M-%D %H:%M:%S")
+    json_body = [
+        {
+            "measurement": "temperature",
+            "time": time,
+            "fields": {
+                "T1": float(msg[0]),
+                "T2": float(msg[1])
+            }
+        }
+    ]
+    dbm.db_insert("hyoja", json_body)
+    '''
     heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
     is_on = heater.status().is_on
-    msg = msg.split(',')
     total = 0
     for i in range(len(msg)):
         logging.debug("Sensor: {}, Value: {}".format(i, msg[i]))
@@ -26,9 +40,23 @@ def _process_temp(msg):
         heater.off()
     elif avg < TEMPLOW and not is_on:
         heater.on()
-    
+    '''
 
 def _process_humi(msg):
+    msg = msg.split(',')
+    time = datetime.strftime("%Y-%M-%D %H:%M:%S")
+    json_body = [
+        {
+            "measurement": "humidity",
+            "time": time,
+            "fields": {
+                "H1": float(msg[0]),
+                "H2": float(msg[1])
+            }
+        }
+    ]
+    dbm.db_insert("hyoja", json_body)
+    '''
     humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip=os.getenv('HUMIDIFIER_IP'), token=os.getenv('HUMIDIFIER_TOKEN'))
     is_on = humidifier.status().is_on
     if humidifier.status().no_water:
@@ -38,7 +66,6 @@ def _process_humi(msg):
         else:
             pass
         return -1
-    msg = msg.split(',')
     total = 0
     for i in range(len(msg)):
         logging.debug("Sensor: {}, Value: {}".format(i, msg[i]))
@@ -50,7 +77,7 @@ def _process_humi(msg):
     elif avg < HUMLOW and not is_on:
         # turn on humidifier
         humidifier.on()
-    
+    '''
 
 def _on_connect(client, userdata, flags, rc):
     print("Connected with code" + str(rc))
@@ -66,6 +93,7 @@ def _on_message(client, userdata, msg):
     if msg[0] == msg[1]:
         if int(msg[0]) == 0:
             sn.send_notification("Zero Data Notification", "Receieved 0 at following sensor\nLOCATION: {}\nSENSOR: {}".format(location, sensor_type))
+    # disable temperature humidity controls until setup finished
     if "temperature" in sensor_type:
         _process_temp(decoded_msg)
     elif "humidity" in sensor_type:
