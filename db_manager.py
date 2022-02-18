@@ -7,13 +7,13 @@ load_dotenv()
 client = InfluxDBClient(host=os.getenv('DB_IP'), port=8086, username=os.getenv('DB_ID'), password=os.getenv('DB_PW'))
 
 def db_exist(dbname):
+    db_list = client.get_list_database()
     for db in db_list:
         if dbname in db["name"]:
             return True
     return False
 
 def db_init(dbname):
-    db_list = client.get_list_database()
     if not db_exist(dbname):
         client.create_database(dbname)
     else:
