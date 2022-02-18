@@ -16,11 +16,11 @@ HUMLOW = 88
 
 def _process_temp(msg):
     msg = msg.split(',')
-    time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
+    #time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
     json_body = [
         {
             "measurement": "temperature",
-            "time": time,
+            "time": datetime.now(),
             "fields": {
                 "T1": float(msg[0]),
                 "T2": float(msg[1])
@@ -44,11 +44,11 @@ def _process_temp(msg):
 
 def _process_humi(msg):
     msg = msg.split(',')
-    time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
+    #time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
     json_body = [
         {
             "measurement": "humidity",
-            "time": time,
+            "time": datetime.now(),
             "fields": {
                 "H1": float(msg[0]),
                 "H2": float(msg[1])
