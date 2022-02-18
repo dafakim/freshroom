@@ -32,3 +32,5 @@ if __name__ == '__main__':
     #db_init("hyoja")
     client.switch_database("hyoja")
     print(client.get_list_database())
+    response = client.query('SELECT * FROM "temperature"')
+    print(response.raw)

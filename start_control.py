@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import os
 from miio import airhumidifier_mjjsq, heater_miot
 from datetime import datetime
+from pytz import timezone
 import logging
 import slack_notifier as sn
 import db_manager as dbm
@@ -20,7 +21,7 @@ def _process_temp(msg):
     json_body = [
         {
             "measurement": "temperature",
-            "time": datetime.now(),
+            "time": datetime.now(timezone('Asia/Seoul')),
             "fields": {
                 "T1": float(msg[0]),
                 "T2": float(msg[1])
@@ -48,7 +49,7 @@ def _process_humi(msg):
     json_body = [
         {
             "measurement": "humidity",
-            "time": datetime.now(),
+            "time": datetime.now(timezone('Asia/Seoul')),
             "fields": {
                 "H1": float(msg[0]),
                 "H2": float(msg[1])
