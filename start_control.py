@@ -27,7 +27,7 @@ def _process_temp(msg):
             }
         }
     ]
-    dbm.db_insert("hyoja", json_body)
+    print(dbm.db_insert("hyoja", json_body))
     '''
     heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
     is_on = heater.status().is_on
