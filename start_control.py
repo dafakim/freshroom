@@ -89,7 +89,7 @@ def _on_message(client, userdata, msg):
     location = topic[0]
     sensor_type = topic[1]
     decoded_msg = msg.payload.decode('utf-8')
-    logging.info("{}\nLOCATION: {}\nSENSOR: {}\nPAYLOAD: {}".format(datetime.now(), location, sensor_type, decoded_msg))
+    logging.info("{}\nLOCATION: {}\nSENSOR: {}\nPAYLOAD: {}".format(datetime.now(timezone('Asia/Seoul')), location, sensor_type, decoded_msg))
     msg = decoded_msg.split(',')
     if msg[0] == msg[1]:
         if int(float(msg[0])) == 0:
