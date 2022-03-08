@@ -2,6 +2,7 @@ from influxdb import InfluxDBClient
 from dotenv import load_dotenv
 import os
 from datetime import datetime
+from pytz import timezone
 
 load_dotenv()
 client = InfluxDBClient(host=os.getenv('DB_IP'), port=8086, username=os.getenv('DB_ID'), password=os.getenv('DB_PW'))
@@ -29,8 +30,8 @@ def db_insert(dbname, jsondata):
         return False
 
 if __name__ == '__main__':
-    #db_init("hyoja")
     client.switch_database("hyoja")
     print(client.get_list_database())
-    response = client.query('SELECT * FROM "temperature"')
+    db_insert("hyoja", json_body)
+    response = client.query('SELECT * FROM "humidity"')
     print(response.raw)
