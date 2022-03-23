@@ -10,8 +10,8 @@ import db_manager as dbm
 
 logging.basicConfig(filename = 'values.log', level=logging.INFO)
 
-TEMPHIGH = 25
-TEMPLOW = 24
+TEMPHIGH = 22
+TEMPLOW = 21
 HUMHIGH = 90
 HUMLOW = 88
 
