@@ -78,7 +78,7 @@ def _process_humi(msg):
     elif avg < HUMLOW and not is_on:
         # turn on humidifier
         humidifier.on()
-    if is_on != heater.status().is_on:
+    if is_on != humidifier.status().is_on:
         json_body[0]["fields"]["action"] = True
     dbm.db_insert("hyoja", json_body)
 
