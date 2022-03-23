@@ -25,6 +25,7 @@ def _on_message(client, userdata, msg):
     logging.info("{}\nLOCATION: {}\nSENSOR: {}\nPAYLOAD: {}".format(datetime.now(timezone('Asia/Seoul')), location, sensor_type, decoded_msg))
 
 def main():
+    print("obtaining current value")
     load_dotenv()
     client = mqtt.Client('Test')
     client.username_pw_set(os.getenv('ID'), os.getenv('PW'))

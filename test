@@ -1,0 +1,12 @@
+[1mdiff --git a/current_value.py b/current_value.py[m
+[1mindex 4ea6383..1e0bb7f 100644[m
+[1m--- a/current_value.py[m
+[1m+++ b/current_value.py[m
+[36m@@ -25,6 +25,7 @@[m [mdef _on_message(client, userdata, msg):[m
+     logging.info("{}\nLOCATION: {}\nSENSOR: {}\nPAYLOAD: {}".format(datetime.now(timezone('Asia/Seoul')), location, sensor_type, decoded_msg))[m
+ [m
+ def main():[m
+[32m+[m[32m    print("obtaining current value")[m
+     load_dotenv()[m
+     client = mqtt.Client('Test')[m
+     client.username_pw_set(os.getenv('ID'), os.getenv('PW'))[m
