@@ -40,8 +40,7 @@ def _process_temp(msg):
         heater.off()
     elif avg < TEMPLOW and not is_on:
         heater.on()
-    if is_on != heater.status().is_on:
-        json_body[0]["fields"]["action"] = True
+    json_body[0]["fields"]["action"] = heater.status().is_on
     print(dbm.db_insert("hyoja", json_body))
 
 def _process_humi(msg):
@@ -78,8 +77,7 @@ def _process_humi(msg):
     elif avg < HUMLOW and not is_on:
         # turn on humidifier
         humidifier.on()
-    if is_on != humidifier.status().is_on:
-        json_body[0]["fields"]["action"] = True
+    json_body[0]["fields"]["action"] = humidifier.status().is_on
     dbm.db_insert("hyoja", json_body)
 
 def _on_connect(client, userdata, flags, rc):
