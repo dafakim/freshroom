@@ -27,11 +27,14 @@ def _on_message(client, userdata, msg):
 def main():
     print("obtaining current value")
     load_dotenv()
+    _check_miio()
+    '''
     client = mqtt.Client('Test')
     client.username_pw_set(os.getenv('ID'), os.getenv('PW'))
     client.on_connect = _on_connect
     client.on_message = _on_message
     client.connect(os.getenv('IP'))
+    '''
 
 if __name__ == '__main__':
     main()
