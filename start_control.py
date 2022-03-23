@@ -24,12 +24,11 @@ def _process_temp(msg):
             "time": datetime.now(timezone('Asia/Seoul')),
             "fields": {
                 "T1": float(msg[0]),
-                "T2": float(msg[1])
+                "T2": float(msg[1]),
+                "action": False
             }
         }
     ]
-    print(dbm.db_insert("hyoja", json_body))
-    '''
     heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
     is_on = heater.status().is_on
     total = 0
@@ -41,7 +40,9 @@ def _process_temp(msg):
         heater.off()
     elif avg < TEMPLOW and not is_on:
         heater.on()
-    '''
+    if is_on != heater.status().is_on:
+        json_body[0]["fields"]["action"] = True
+    print(dbm.db_insert("hyoja", json_body))
 
 def _process_humi(msg):
     msg = msg.split(',')
@@ -52,12 +53,11 @@ def _process_humi(msg):
             "time": datetime.now(timezone('Asia/Seoul')),
             "fields": {
                 "H1": float(msg[0]),
-                "H2": float(msg[1])
+                "H2": float(msg[1]),
+                "action": False
             }
         }
     ]
-    dbm.db_insert("hyoja", json_body)
-    '''
     humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip=os.getenv('HUMIDIFIER_IP'), token=os.getenv('HUMIDIFIER_TOKEN'))
     is_on = humidifier.status().is_on
     if humidifier.status().no_water:
@@ -78,7 +78,9 @@ def _process_humi(msg):
     elif avg < HUMLOW and not is_on:
         # turn on humidifier
         humidifier.on()
-    '''
+    if is_on != heater.status().is_on:
+        json_body[0]["fields"]["action"] = True
+    dbm.db_insert("hyoja", json_body)
 
 def _on_connect(client, userdata, flags, rc):
     print("Connected with code" + str(rc))
@@ -101,8 +103,6 @@ def _on_message(client, userdata, msg):
         _process_humi(decoded_msg)
     else:
         pass
-
-
 
 def main():
     load_dotenv()
