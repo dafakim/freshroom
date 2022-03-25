@@ -8,7 +8,7 @@ import logging
 import slack_notifier as sn
 import db_manager as dbm
 
-logging.basicConfig(filename = 'values.log', level=logging.INFO)
+logging.basicConfig(filename = 'debug.log', level=logging.DEBUG)
 
 TEMPHIGH = 22
 TEMPLOW = 21
@@ -109,7 +109,12 @@ def main():
     client.on_connect = _on_connect
     client.on_message = _on_message
     client.connect(os.getenv('IP'))
-    client.loop_forever()
+    try:
+        client.loop_forever()
+    except Exception as e:
+        print(e)
+        logging.debug(e)
+
 
 if __name__ == '__main__':
     main()
