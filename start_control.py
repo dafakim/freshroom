@@ -114,6 +114,8 @@ def main():
     except Exception as e:
         print(e)
         logging.debug(e)
+        sn.send_notification("RPI Stopped Due to Following Error\n{}\nRestarting ...".format(e))
+        main()
 
 
 if __name__ == '__main__':
