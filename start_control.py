@@ -11,9 +11,9 @@ import db_manager as dbm
 logging.basicConfig(filename = 'debug.log', level=logging.DEBUG)
 
 TEMPHIGH = 22
-TEMPLOW = 21
-HUMHIGH = 90
-HUMLOW = 88
+TEMPLOW = 19
+HUMHIGH = 85
+HUMLOW = 80
 
 def _process_temp(msg):
     msg = msg.split(',')
