@@ -7,6 +7,8 @@ from pytz import timezone
 import logging
 import slack_notifier as sn
 import db_manager as dbm
+from tapo_plug import tapoPlugApi
+import json
 
 logging.basicConfig(filename = 'debug.log', level=logging.DEBUG)
 
@@ -14,6 +16,7 @@ TEMPHIGH = 12
 TEMPLOW = 8
 HUMHIGH = 85
 HUMLOW = 80
+AIRWASHTIME = 10
 
 def _process_temp(msg):
     msg = msg.split(',')
@@ -80,6 +83,28 @@ def _process_humi(msg):
     json_body[0]["fields"]["action"] = humidifier.status().is_on
     dbm.db_insert("hyoja", json_body)
 
+def _process_airwash():
+    device = {
+    "tapoIp": "192.168.0.25",
+    "tapoEmail": "realkim93@gmail.com",
+    "tapoPassword": "mushfresh1"
+    }
+    now_minute = datetime.datetime.now().minute
+    plug_is_on = tapoPlugApi.getDeviceRunningInfo(device)
+    plug_is_on = json.loads(plug_is_on)
+    if now_minute < AIRWASHTIME:
+        if not plug_is_on:
+            try:
+                print(tapoPlugApi.plugOn(device))
+            except Exception as e:
+                print(e)
+    else:
+        if plug_is_on:
+            try:
+                print(tapoPlugApi.plugOff(device))
+            except Exception as e:
+                print(e)
+
 def _on_connect(client, userdata, flags, rc):
     print("Connected with code" + str(rc))
     client.subscribe('#')
@@ -101,6 +126,7 @@ def _on_message(client, userdata, msg):
         _process_humi(decoded_msg)
     else:
         pass
+    _process_airwash()
 
 def main():
     load_dotenv()
