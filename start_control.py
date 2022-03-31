@@ -16,7 +16,7 @@ TEMPHIGH = 12
 TEMPLOW = 8
 HUMHIGH = 85
 HUMLOW = 80
-AIRWASHTIME = 10
+AIRWASHTIME = 5
 
 def _process_temp(msg):
     msg = msg.split(',')
