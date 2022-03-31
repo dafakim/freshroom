@@ -92,6 +92,7 @@ def _process_airwash():
     now_minute = datetime.now().minute
     plug_is_on = tapoPlugApi.getDeviceRunningInfo(device)
     plug_is_on = json.loads(plug_is_on)
+    plug_is_on = plug_is_on["result"]["device_on"]
     if now_minute < AIRWASHTIME:
         if not plug_is_on:
             try:
