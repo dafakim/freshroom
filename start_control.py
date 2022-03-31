@@ -89,7 +89,7 @@ def _process_airwash():
     "tapoEmail": "realkim93@gmail.com",
     "tapoPassword": "mushfresh1"
     }
-    now_minute = datetime.datetime.now().minute
+    now_minute = datetime.now().minute
     plug_is_on = tapoPlugApi.getDeviceRunningInfo(device)
     plug_is_on = json.loads(plug_is_on)
     if now_minute < AIRWASHTIME:
