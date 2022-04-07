@@ -143,7 +143,7 @@ def _on_message(client, userdata, msg):
                 print("Zero Data")
                 #sn.send_notification("Zero Data Notification", "Receieved 0 at following sensor\nLOCATION: {}\nSENSOR: {}".format(location, sensor_type))
     else:
-        split_msg = decoded_msg
+        split_msg = [decoded_msg]
     # disable temperature humidity controls until setup finished
     if "temperature" in sensor_type:
         _process_temp(location, split_msg)
