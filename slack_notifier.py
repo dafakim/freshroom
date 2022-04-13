@@ -1,6 +1,6 @@
 import requests
 import json
-url = "https://hooks.slack.com/services/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"
+url = "https://hooks.slack.com/services/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"
 
 def send_notification(title, msg):
 	slack_data = {
@@ -17,3 +17,6 @@ def send_notification(title, msg):
 			}]
 		}
 	response = requests.post(url, data=json.dumps(slack_data))
+
+if __name__ == "__main__":
+    send_notification("msg from slack notifier libary", "notification successful")
