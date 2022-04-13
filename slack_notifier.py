@@ -17,3 +17,9 @@ def send_notification(title, msg):
 			}]
 		}
 	response = requests.post(url, data=json.dumps(slack_data))
+
+def main():
+	send_notification("Notification from libary", "SUCCESS")
+
+if __name__ == "__main__":
+	main()
