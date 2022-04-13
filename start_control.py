@@ -160,6 +160,7 @@ def main():
     client.on_connect = _on_connect
     client.on_message = _on_message
     client.connect(os.getenv('IP'))
+    sn.send_notification("System Notification", "Starting Hyoja RPI")
     try:
         client.loop_forever()
     except Exception as e:
