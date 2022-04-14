@@ -160,13 +160,13 @@ def main():
     client.on_connect = _on_connect
     client.on_message = _on_message
     client.connect(os.getenv('IP'))
-    sn.send_notification("System Notification", "Starting Hyoja RPI")
+    #sn.send_notification("System Notification", "Starting Hyoja RPI")
     try:
         client.loop_forever()
     except Exception as e:
         print(e)
         logging.debug(e)
-        sn.send_notification("RPI Error Notification", "RPI Stopped Due to Following Error\n{}\nRestarting ...".format(e))
+        #sn.send_notification("RPI Error Notification", "RPI Stopped Due to Following Error\n{}\nRestarting ...".format(e))
         main()
 
 
