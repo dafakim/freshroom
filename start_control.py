@@ -1,22 +1,27 @@
+import logging
+import json
+import os
+from datetime import datetime
+
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
-import os
 from miio import airhumidifier_mjjsq, heater_miot
-from datetime import datetime
 from pytz import timezone
-import logging
-import slack_notifier as sn
-import db_manager as dbm
 from tapo_plug import tapoPlugApi
-import json
+
+import db_manager as dbm
+import slack_notifier as sn
+
 
 logging.basicConfig(filename = 'debug.log', level=logging.DEBUG)
+
 
 TEMPHIGH = 12
 TEMPLOW = 8
 HUMHIGH = 85
 HUMLOW = 80
 AIRWASHTIME = 5
+
 
 def _process_temp(location, msg):
     #time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
@@ -130,12 +135,45 @@ def _on_connect(client, userdata, flags, rc):
     print("Connected with code" + str(rc))
     client.subscribe('#')
 
+EVENT_TYPE_HUMIDITY = "humidity"
+EVENT_TYPE_TEMPERATURE = "temperature"
+
+type_to_processor = {
+    EVENT_TYPE_HUMIDITY: instance,
+    EVENT_TYPE_TEMPERATURE: instance
+}
+
 def _on_message(client, userdata, msg):
-    topic = msg.topic.split('/')
-    location = topic[0]
-    sensor_type = topic[1]
+    location, sensor_type = msg.topic.split('/')
+    # decoded_msg = decode_msg(msg.payload)
     decoded_msg = msg.payload.decode('utf-8')
-    #logging.info("{}\nLOCATION: {}\nSENSOR: {}\nPAYLOAD: {}".format(datetime.now(timezone('Asia/Seoul')), location, sensor_type, decoded_msg))
+
+    # check validity of decoded_msg, if not valid raise error
+    # if valid(decoded_msg):
+    #   type_instance=t2p[sensor_type]
+    #   type_instance.acton(decoded_msg)
+    # else:
+    #   raise error
+    # 
+
+
+    messages = decoded_msg.split(',')
+
+    if len(messages) == 2:
+        if not (messages[0] == '0' and messages[1] == '0'):
+            # error
+            pass
+        else:
+            # error
+            pass
+
+    else:
+        # unexpected
+        logging.error(f"{datetime.now(timezone('Asia/Seoul'))}\n"
+                      + f"LOCATION: {location}\n"
+                      + f"SENSOR: {sensor_type}\n"
+                      + f"PAYLOAD: {decoded_msg}")
+
     if ',' in decoded_msg:
         split_msg = decoded_msg.split(',')
         if split_msg[0] == split_msg[1]:
@@ -147,27 +185,49 @@ def _on_message(client, userdata, msg):
     # disable temperature humidity controls until setup finished
     if "temperature" in sensor_type:
         _process_temp(location, split_msg)
-    elif "humidity" in sensor_type:
+    elif EVENT_TYPE_HUMIDITY in sensor_type:
         _process_humi(location, split_msg)
     else:
         pass
     _process_airwash()
 
-def main():
-    load_dotenv()
+def init_client():
+    # type: () -> mqtt.Client
+    # populate type_to_processor with valid processor instances
     client = mqtt.Client('M1')
     client.username_pw_set(os.getenv('ID'), os.getenv('PW'))
     client.on_connect = _on_connect
     client.on_message = _on_message
-    client.connect(os.getenv('IP'))
-    #sn.send_notification("System Notification", "Starting Hyoja RPI")
-    try:
-        client.loop_forever()
-    except Exception as e:
-        print(e)
-        logging.debug(e)
-        #sn.send_notification("RPI Error Notification", "RPI Stopped Due to Following Error\n{}\nRestarting ...".format(e))
-        main()
+
+    return client
+
+
+def main():
+    load_dotenv()
+    SERVER_IP = os.getenv('IP')
+
+    retry_count = 0
+    while retry_count < 3:
+        try:
+            client = init_client()
+
+            client.connect(SERVER_IP)
+            #sn.send_notification("System Notification", "Starting Hyoja RPI")
+        except Exception as e:
+            logging.debug("Client Init Failed\n{}".format(e))
+            retry_count +=1
+        
+        try:
+            retry_count = 0
+            # add client.loop_forever() to subprocess 1
+            # add airwashing logic to subprocess 2
+            # 
+            # fork subprocesses
+            # if subprocess dies find out why, log it, rerun subprocess
+            client.loop_forever()
+        except Exception as e:
+            logging.debug("Client Loop Exited\n{}".format(e))
+            #sn.send_notification("RPI Error Notification", "RPI Stopped Due to Following Error\n{}\nRestarting ...".format(e))
 
 
 if __name__ == '__main__':
