@@ -135,6 +135,7 @@ def _on_message(client, userdata, msg):
     location = topic[0]
     sensor_type = topic[1]
     decoded_msg = msg.payload.decode('utf-8')
+    sn.send_notification("Test Data Stream".format(topic), "{} / {} / {}".format(topic, location, decoded_msg))
     #logging.info("{}\nLOCATION: {}\nSENSOR: {}\nPAYLOAD: {}".format(datetime.now(timezone('Asia/Seoul')), location, sensor_type, decoded_msg))
     if ',' in decoded_msg:
         split_msg = decoded_msg.split(',')
@@ -160,7 +161,7 @@ def main():
     client.on_connect = _on_connect
     client.on_message = _on_message
     client.connect(os.getenv('IP'))
-    sn.send_notification("System Notification", "Starting Hyoja RPI")
+    sn.send_notification("System Notification", "Starting Hyoja RPI at {}".datetime.now(timezone('Asia/Seoul')))
     try:
         client.loop_forever()
     except Exception as e:
