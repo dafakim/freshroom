@@ -135,7 +135,6 @@ def _on_message(client, userdata, msg):
     location = topic[0]
     sensor_type = topic[1]
     decoded_msg = msg.payload.decode('utf-8')
-    sn.send_notification("Test Data Stream".format(topic), "{} / {} / {}".format(topic, location, decoded_msg))
     #logging.info("{}\nLOCATION: {}\nSENSOR: {}\nPAYLOAD: {}".format(datetime.now(timezone('Asia/Seoul')), location, sensor_type, decoded_msg))
     if ',' in decoded_msg:
         split_msg = decoded_msg.split(',')
