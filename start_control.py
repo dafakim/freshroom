@@ -161,7 +161,7 @@ def main():
     client.on_connect = _on_connect
     client.on_message = _on_message
     client.connect(os.getenv('IP'))
-    sn.send_notification("System Notification", "Starting Hyoja RPI at {}".datetime.now(timezone('Asia/Seoul')))
+    sn.send_notification("System Notification", "Starting Hyoja RPI at {}".format(datetime.now(timezone('Asia/Seoul'))))
     try:
         client.loop_forever()
     except Exception as e:
