@@ -146,7 +146,7 @@ def _on_message(client, userdata, msg):
         if split_msg[0] == split_msg[1]:
             if int(float(split_msg[0])) == 0:
                 print("Zero Data")
-                #sn.send_notification("Zero Data Notification", "Receieved 0 at following sensor\nLOCATION: {}\nSENSOR: {}".format(location, sensor_type))
+                sn.send_notification("Zero Data Notification", "Receieved 0 at following sensor\nLOCATION: {}\nSENSOR: {}".format(location, sensor_type))
     else:
         split_msg = [decoded_msg]
     # disable temperature humidity controls until setup finished
@@ -165,13 +165,13 @@ def main():
     client.on_connect = _on_connect
     client.on_message = _on_message
     client.connect(os.getenv('IP'))
-    #sn.send_notification("System Notification", "Starting Hyoja RPI")
+    sn.send_notification("System Notification", "Starting Hyoja RPI at {}".format(datetime.now(timezone('Asia/Seoul'))))
     try:
         client.loop_forever()
     except Exception as e:
         print(e)
         logging.debug(e)
-        #sn.send_notification("RPI Error Notification", "RPI Stopped Due to Following Error\n{}\nRestarting ...".format(e))
+        sn.send_notification("RPI Error Notification", "RPI Stopped Due to Following Error\n{}\nRestarting ...".format(e))
         main()
 
 

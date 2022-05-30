@@ -1,6 +1,6 @@
 import requests
 import json
-url = "https://hooks.slack.com/services/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"
+import os 
 
 def send_notification(title, msg):
 	slack_data = {
@@ -16,6 +16,7 @@ def send_notification(title, msg):
 			}]
 			}]
 		}
+	url = os.getenv('SLACK_WEBHOOK_URL')
 	response = requests.post(url, data=json.dumps(slack_data))
 
 def main():
