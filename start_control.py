@@ -1,7 +1,9 @@
 import logging
 import json
 import os
+import traceback
 from datetime import datetime
+from multiprocessing import Process
 
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
@@ -22,6 +24,7 @@ HUMHIGH = 85
 HUMLOW = 80
 AIRWASHTIME = 5
 
+#class sensorProcess(Process)
 
 def _process_temp(location, msg):
     #time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
@@ -108,7 +111,7 @@ def _process_humi(location, msg):
         ]
     dbm.db_insert(location, json_body)
 
-def _process_airwash():
+def process_airwash():
     device = {
     "tapoIp": "192.168.0.25",
     "tapoEmail": "realkim93@gmail.com",
@@ -210,24 +213,21 @@ def main():
     while retry_count < 3:
         try:
             client = init_client()
-
             client.connect(SERVER_IP)
-            #sn.send_notification("System Notification", "Starting Hyoja RPI")
+            sn.send_notification("System Notification", "Starting Hyoja RPI")
         except Exception as e:
             logging.debug("Client Init Failed\n{}".format(e))
+            sn.send_notification("Error", "Could not connect to MQTT server. Count {}".format(retry_count))
             retry_count +=1
-        
         try:
             retry_count = 0
-            # add client.loop_forever() to subprocess 1
-            # add airwashing logic to subprocess 2
-            # 
-            # fork subprocesses
-            # if subprocess dies find out why, log it, rerun subprocess
-            client.loop_forever()
+            humitemp_control = Process(target=client.loop_forever)
+            airwash_control = Process(target=process_airwash)
+            humitemp_control.start()
+            airwash_control.start()
         except Exception as e:
             logging.debug("Client Loop Exited\n{}".format(e))
-            #sn.send_notification("RPI Error Notification", "RPI Stopped Due to Following Error\n{}\nRestarting ...".format(e))
+            sn.send_notification("Error", "RPI Stopped Due to Following Error\n{}\nRestarting ...".format(e))
 
 
 if __name__ == '__main__':
