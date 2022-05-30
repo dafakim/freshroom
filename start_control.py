@@ -56,10 +56,8 @@ def _process_temp(location, msg):
         ]
     print(dbm.db_insert(location, json_body))
 
-def _process_humi(location, msg):
-    client = mqtt.Client('publisher')
-    client.username_pw_set(os.getenv('ID'), os.getenv('PW'))
-    client.connect(os.getenv('IP'))
+def _process_humi(client, location, msg):
+
 
     if len(msg) > 1:
         json_body = [
@@ -153,7 +151,7 @@ def _on_message(client, userdata, msg):
     if "temperature" in sensor_type:
         _process_temp(location, split_msg)
     elif "humidity" in sensor_type:
-        _process_humi(location, split_msg)
+        _process_humi(client, location, split_msg)
     else:
         pass
     _process_airwash()
