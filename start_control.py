@@ -97,7 +97,7 @@ def _process_humi(client, location, msg):
             #humidifier.on()
             print("Turning humidifier on")
             client.publish("hyoja/humidifierStatus", 1)
-        json_body[0]["fields"]["action"] = humidifier.status().is_on
+        # json_body[0]["fields"]["action"] = 
     else:
         json_body = [
             {
