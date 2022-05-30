@@ -57,7 +57,10 @@ def _process_temp(location, msg):
     print(dbm.db_insert(location, json_body))
 
 def _process_humi(location, msg):
-    #time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
+    client = mqtt.Client('publisher')
+    client.username_pw_set(os.getenv('ID'), os.getenv('PW'))
+    client.connect(os.getenv('IP'))
+
     if len(msg) > 1:
         json_body = [
             {
@@ -86,10 +89,12 @@ def _process_humi(location, msg):
         avg = total/len(msg)
         if avg > HUMHIGH and is_on:
             # turn off humidifier
-            humidifier.off()
+            #humidifier.off()
+            client.publish("hyoja/humidifierStatus", 0)
         elif avg < HUMLOW and not is_on:
             # turn on humidifier
-            humidifier.on()
+            #humidifier.on()
+            client.publish("hyoja/humidifierStatus", 1)
         json_body[0]["fields"]["action"] = humidifier.status().is_on
     else:
         json_body = [
