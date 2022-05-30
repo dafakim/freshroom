@@ -81,8 +81,8 @@ def _process_humi(client, location, msg):
             else:
                 pass
             return -1
-        total = 0
         '''
+        total = 0
         for i in range(len(msg)):
             logging.debug("Sensor: {}, Value: {}".format(i, msg[i]))
             total += float(msg[i])
