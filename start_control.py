@@ -133,6 +133,17 @@ def _process_airwash():
             except Exception as e:
                 print(e)
 
+def _process_light(client):
+    now_hour = datetime.now(timezone('Asia/Seoul')).hour
+    if now_hour > 5: # keep light on from 6:00AM to 11:59
+        print("turning light on")
+        client.publish("hyoja/lightStatus", 1)
+    else:
+        print("turning light off")
+        client.publish("hyoja/lightStatus", 0)
+
+
+
 def _on_connect(client, userdata, flags, rc):
     print("Connected with code" + str(rc))
     client.subscribe('#')
@@ -159,6 +170,7 @@ def _on_message(client, userdata, msg):
     else:
         pass
     _process_airwash()
+    _process_light(client)
 
 def main():
     load_dotenv()
