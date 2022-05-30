@@ -88,10 +88,12 @@ def _process_humi(client, location, msg):
         if avg > HUMHIGH and is_on:
             # turn off humidifier
             #humidifier.off()
+            print("Turning humidifier off")
             client.publish("hyoja/humidifierStatus", 0)
         elif avg < HUMLOW and not is_on:
             # turn on humidifier
             #humidifier.on()
+            print("Turning humidifier on")
             client.publish("hyoja/humidifierStatus", 1)
         json_body[0]["fields"]["action"] = humidifier.status().is_on
     else:
