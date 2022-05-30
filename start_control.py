@@ -136,8 +136,10 @@ def _process_airwash():
 def _process_light(client):
     now_hour = datetime.now(timezone('Asia/Seoul')).hour
     if now_hour > 5: # keep light on from 6:00AM to 11:59
+        print("turning light on")
         client.publish("hyoja/lightStatus", 1)
     else:
+        print("turning light off")
         client.publish("hyoja/lightStatus", 0)
 
 
