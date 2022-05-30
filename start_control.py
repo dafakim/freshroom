@@ -71,8 +71,9 @@ def _process_humi(client, location, msg):
                 }
             }
         ]
-        humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip=os.getenv('HUMIDIFIER_IP'), token=os.getenv('HUMIDIFIER_TOKEN'))
-        is_on = humidifier.status().is_on
+        #humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip=os.getenv('HUMIDIFIER_IP'), token=os.getenv('HUMIDIFIER_TOKEN'))
+        #is_on = humidifier.status().is_on
+        '''
         if humidifier.status().no_water:
             logging.error("HUMIDIFIER NO WATER, PLEASE FILL ASAP")
             if is_on:
@@ -81,16 +82,17 @@ def _process_humi(client, location, msg):
                 pass
             return -1
         total = 0
+        '''
         for i in range(len(msg)):
             logging.debug("Sensor: {}, Value: {}".format(i, msg[i]))
             total += float(msg[i])
         avg = total/len(msg)
-        if avg > HUMHIGH and is_on:
+        if avg > HUMHIGH:
             # turn off humidifier
             #humidifier.off()
             print("Turning humidifier off")
             client.publish("hyoja/humidifierStatus", 0)
-        elif avg < HUMLOW and not is_on:
+        elif avg < HUMLOW:
             # turn on humidifier
             #humidifier.on()
             print("Turning humidifier on")
