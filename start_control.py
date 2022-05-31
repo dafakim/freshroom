@@ -232,10 +232,10 @@ def main():
         try:
             mqtt_client = init_client()
             scheduler = BackgroundScheduler(timezone='Asia/Seoul')
-            scheduler = add_lightcontrol(scheduler, mqtt_client)
-            scheduler = add_airwashcontrol(scheduler)
 
             mqtt_client.connect(SERVER_IP)
+            scheduler = add_lightcontrol(scheduler, mqtt_client)
+            scheduler = add_airwashcontrol(scheduler)
             sn.send_notification("System Notification", "Hyoja System Initiated")
         except Exception as e:
             logging.debug("Client Init Failed\n{}".format(e))
