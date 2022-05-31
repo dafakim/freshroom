@@ -20,20 +20,20 @@ import slack_notifier as sn
 logging.basicConfig(filename = "debug.log", level=logging.DEBUG)
 
 
-TEMPHIGH = 12
-TEMPLOW = 8
+AIRWASHTIME = 5
 HUMHIGH = 85
 HUMLOW = 80
-AIRWASHTIME = 5
-EVENT_TYPE_HUMIDITY = "humidity"
-EVENT_TYPE_TEMPERATURE = "temperature"
-HUMIDIFIER_CONTROL_CHANNEL = "hyoja/humidifierStatus"
-LIGHT_CONTROL_CHANNEL = "hyoja/lightStatus"
 LIGHTSTARTTIME = 8
 LIGHTENDTIME = 0
 ON = 1
 OFF = 0
+TEMPHIGH = 12
+TEMPLOW = 8
 WRONGMSGCOUNT = 0
+EVENT_TYPE_HUMIDITY = "humidity"
+EVENT_TYPE_TEMPERATURE = "temperature"
+HUMIDIFIER_CONTROL_CHANNEL = "hyoja/humidifierStatus"
+LIGHT_CONTROL_CHANNEL = "hyoja/lightStatus"
 
 class FormatError(Exception):
     def __init__(self, msg):
@@ -58,16 +58,18 @@ def _process_temperature_data(location, data_list):
             }
         ]
         temp_avg = sum(data_list)/len(data_list)
+
         try:
             heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
         except Exception as e:
             print(e)
             sn.send_notification("Error", "Could not connect to heater")
             return -1
+
         is_on = heater.status().is_on
-        if avg > TEMPHIGH and is_on:
+        if temp_avg > TEMPHIGH and is_on:
             heater.off()
-        elif avg < TEMPLOW and not is_on:
+        elif temp_avg < TEMPLOW and not is_on:
             heater.on()
         else:
             pass
@@ -89,7 +91,9 @@ def _process_humidity_data(location, data_list, client):
                 }
             }
         ]
+
         humidity_avg = sum(data_list)/len(data_list)
+        
         if humidity_avg > HUMHIGH:
             client.publish(HUMIDIFIER_CONTROL_CHANNEL, OFF)
             json_body[0]["fields"]["action"] = OFF
