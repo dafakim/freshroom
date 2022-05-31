@@ -209,8 +209,8 @@ def init_client():
 
 def add_lightcontrol(scheduler, client):
     # add start and end control for lighting
-    scheduler.add_job(turn_light, 'cron', hour=LIGHTSTARTTIME, min=0, args=[ON])
-    scheduler.add_job(turn_light, 'cron', hour=LIGHTENDTIME, min=0, args=[OFF])
+    scheduler.add_job(turn_light, 'cron', hour=LIGHTSTARTTIME, min=0, args=[ON, client])
+    scheduler.add_job(turn_light, 'cron', hour=LIGHTENDTIME, min=0, args=[OFF, client])
 
     return scheduler
 
