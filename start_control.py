@@ -6,8 +6,10 @@ from datetime import datetime
 from multiprocessing import Process
 
 import paho.mqtt.client as mqtt
+from apscheduler.schedulers.background import BackgroundScheduler
 from dotenv import load_dotenv
 from miio import airhumidifier_mjjsq, heater_miot
+from miio.exceptions import DeviceException
 from pytz import timezone
 from tapo_plug import tapoPlugApi
 
@@ -15,7 +17,7 @@ import db_manager as dbm
 import slack_notifier as sn
 
 
-logging.basicConfig(filename = 'debug.log', level=logging.DEBUG)
+logging.basicConfig(filename = "debug.log", level=logging.DEBUG)
 
 
 TEMPHIGH = 12
@@ -23,63 +25,85 @@ TEMPLOW = 8
 HUMHIGH = 85
 HUMLOW = 80
 AIRWASHTIME = 5
+EVENT_TYPE_HUMIDITY = "humidity"
+EVENT_TYPE_TEMPERATURE = "temperature"
+HUMIDIFIER_CONTROL_CHANNEL = "hyoja/humidifierStatus"
+LIGHT_CONTROL_CHANNEL = "hyoja/lightStatus"
+LIGHTSTARTTIME = 8
+LIGHTENDTIME = 0
+ON = 1
+OFF = 0
+WRONGMSGCOUNT = 0
 
-#class sensorProcess(Process)
+class FormatError(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
 
-def _process_temp(location, msg):
+class ZeroDataError(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
+
+def _process_temperature_data(location, data_list):
     #time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
-    if len(msg) > 1:
+    if 0 not in data_list:
         json_body = [
             {
                 "measurement": "temperature",
-                "time": datetime.now(timezone('Asia/Seoul')),
+                "time": datetime.now(timezone("Asia/Seoul")),
                 "fields": {
-                    "T1": float(msg[0]),
-                    "T2": float(msg[1]),
+                    "T1": data_list[0],
+                    "T2": data_list[1],
                     "action": False
                 }
             }
         ]
-        heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
+        temp_avg = sum(data_list)/len(data_list)
+        try:
+            heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
+        except Exception as e:
+            print(e)
+            sn.send_notification("Error", "Could not connect to heater")
+            return -1
         is_on = heater.status().is_on
-        total = 0
-        for i in range(len(msg)):
-            logging.debug("Sensor: {}, Value: {}".format(i, msg[i]))
-            total += float(msg[i])
-        avg = total/len(msg)
         if avg > TEMPHIGH and is_on:
             heater.off()
         elif avg < TEMPLOW and not is_on:
             heater.on()
+        else:
+            pass
         json_body[0]["fields"]["action"] = heater.status().is_on
     else:
-        json_body = [
-            {
-                "measurement": "temperature",
-                "time": datetime.now(timezone('Asia/Seoul')),
-                "fields": {
-                    "T1": float(msg[0])
-                }
-            }
-        ]
-    print(dbm.db_insert(location, json_body))
+        raise ZeroDataError("Temperature data has 0")
+    dbm.db_insert(location, json_body)
 
-def _process_humi(location, msg):
-    #time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
-    if len(msg) > 1:
+def _process_humidity_data(location, data_list, client):
+    if 0 not in data_list:
         json_body = [
             {
                 "measurement": "humidity",
-                "time": datetime.now(timezone('Asia/Seoul')),
+                "time": datetime.now(timezone("Asia/Seoul")),
                 "fields": {
-                    "H1": float(msg[0]),
-                    "H2": float(msg[1]),
+                    "H1": data_list[0],
+                    "H2": data_list[1],
                     "action": False
                 }
             }
         ]
-        humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip=os.getenv('HUMIDIFIER_IP'), token=os.getenv('HUMIDIFIER_TOKEN'))
-        is_on = humidifier.status().is_on
+        humidity_avg = sum(data_list)/len(data_list)
+        if humidity_avg > HUMHIGH:
+            client.publish(HUMIDIFIER_CONTROL_CHANNEL, OFF)
+            json_body[0]["fields"]["action"] = OFF
+        elif humidity_avg < HUMLOW:
+            client.publish(HUMIDIFIER_CONTROL_CHANNEL, ON)
+            json_body[0]["fields"]["action"] = ON
+        else:
+            pass
+        '''
+        try:
+            humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip=os.getenv('HUMIDIFIER_IP'), token=os.getenv('HUMIDIFIER_TOKEN'))
+            is_on = humidifier.status().is_on
+        except DeviceException as e:
+            print(e)
         if humidifier.status().no_water:
             logging.error("HUMIDIFIER NO WATER, PLEASE FILL ASAP")
             if is_on:
@@ -99,100 +123,79 @@ def _process_humi(location, msg):
             # turn on humidifier
             humidifier.on()
         json_body[0]["fields"]["action"] = humidifier.status().is_on
+        '''
     else:
-        json_body = [
-            {
-                "measurement": "humidity",
-                "time": datetime.now(timezone('Asia/Seoul')),
-                "fields": {
-                    "H1": float(msg[0])
-                }
-            }
-        ]
+        raise ZeroDataError("Humidity data has 0")
     dbm.db_insert(location, json_body)
 
-def process_airwash():
+def turn_light(state, client):
+    try:
+        client.publish(LIGHT_CONTROL_CHANNEL, state)
+    except Exception as e:
+        print(e)
+        sn.send_notification("Error", "Failed to publish to MQTT server")
+
+def turn_airwash(state):
+    # state is int value of 1(ON) or 0(off)
     device = {
     "tapoIp": "192.168.0.25",
     "tapoEmail": "realkim93@gmail.com",
     "tapoPassword": "mushfresh1"
     }
-    now_minute = datetime.now().minute
-    plug_is_on = tapoPlugApi.getDeviceRunningInfo(device)
-    plug_is_on = json.loads(plug_is_on)
-    plug_is_on = plug_is_on["result"]["device_on"]
-    if now_minute < AIRWASHTIME:
-        if not plug_is_on:
-            try:
-                print(tapoPlugApi.plugOn(device))
-            except Exception as e:
-                print(e)
+    if state:
+        try:
+            print(tapoPlugApi.plugOn(device))
+            sn.send_notification("System Notification", "Turning airwash ON")
+        except Exception as e:
+            print(e)
+            sn.send_notification("Error", "Could not turn on airwash")
     else:
-        if plug_is_on:
-            try:
-                print(tapoPlugApi.plugOff(device))
-            except Exception as e:
-                print(e)
+        try:
+            print(tapoPlugApi.plugOff(device))
+            sn.send_notification("System Notification", "Turning airwash OFF")
+        except Exception as e:
+            print(e)
+            sn.send_notification("Error", "Could not turn off airwash")
 
 def _on_connect(client, userdata, flags, rc):
     print("Connected with code" + str(rc))
     client.subscribe('#')
 
-EVENT_TYPE_HUMIDITY = "humidity"
-EVENT_TYPE_TEMPERATURE = "temperature"
+def _parse_payload(payload):
+    if "," in payload:
+        data1, data2 = payload.split(",")
+        data_list = [float(data1), float(data2)]
+    else:
+        raise FormatError("Payload Invalid.\nReceived Payload: {}".format(payload))
+    # split by ,
+    # check if there are two numbers
+    # raise error if there arent exactly two numbers
 
-type_to_processor = {
-    EVENT_TYPE_HUMIDITY: instance,
-    EVENT_TYPE_TEMPERATURE: instance
-}
+def _decode_msg(msg):
+    # check msg validity
+    if "/" in msg.topic:
+        location, sensor_type = msg.topic.split("/")
+        decoded_payload = msg.payload.decode("utf-8")
+    else:
+        raise FormatError("Message Topic Invalid.\nReceived Message: {}".format(msg))
 
 def _on_message(client, userdata, msg):
-    location, sensor_type = msg.topic.split('/')
-    # decoded_msg = decode_msg(msg.payload)
-    decoded_msg = msg.payload.decode('utf-8')
-
-    # check validity of decoded_msg, if not valid raise error
-    # if valid(decoded_msg):
-    #   type_instance=t2p[sensor_type]
-    #   type_instance.acton(decoded_msg)
-    # else:
-    #   raise error
-    # 
-
-
-    messages = decoded_msg.split(',')
-
-    if len(messages) == 2:
-        if not (messages[0] == '0' and messages[1] == '0'):
-            # error
-            pass
+    try:
+        location, sensor_type, payload = _decode_msg(msg)
+        data_list = _parse_payload(payload)
+        if EVENT_TYPE_HUMIDITY in sensor_type:
+            _process_humidity_data(location, data_list, client)
+        elif EVENT_TYPE_TEMPERATURE in sensor_type:
+            _process_temperature_data(location, data_list)
         else:
-            # error
             pass
-
-    else:
-        # unexpected
-        logging.error(f"{datetime.now(timezone('Asia/Seoul'))}\n"
-                      + f"LOCATION: {location}\n"
-                      + f"SENSOR: {sensor_type}\n"
-                      + f"PAYLOAD: {decoded_msg}")
-
-    if ',' in decoded_msg:
-        split_msg = decoded_msg.split(',')
-        if split_msg[0] == split_msg[1]:
-            if int(float(split_msg[0])) == 0:
-                print("Zero Data")
-                #sn.send_notification("Zero Data Notification", "Receieved 0 at following sensor\nLOCATION: {}\nSENSOR: {}".format(location, sensor_type))
-    else:
-        split_msg = [decoded_msg]
-    # disable temperature humidity controls until setup finished
-    if "temperature" in sensor_type:
-        _process_temp(location, split_msg)
-    elif EVENT_TYPE_HUMIDITY in sensor_type:
-        _process_humi(location, split_msg)
-    else:
-        pass
-    _process_airwash()
+    except FormatError as e:
+        # send message and ignore current message
+        sn.send_notification("Error", e)
+    except ValueError as e:
+        sn.send_notification("Error", e)
+    except ZeroDataError as e:
+        print(e)
 
 def init_client():
     # type: () -> mqtt.Client
@@ -204,6 +207,21 @@ def init_client():
 
     return client
 
+def add_lightcontrol(scheduler, client):
+    # add start and end control for lighting
+    scheduler.add_job(turn_light, 'cron', hour=LIGHTSTARTTIME, min=0, args=[ON])
+    scheduler.add_job(turn_light, 'cron', hour=LIGHTENDTIME, min=0, args=[OFF])
+
+    return scheduler
+
+def add_airwashcontrol(scheduler):
+    # add start and end schedules for air wash
+    # turn on every hour for AIRWASHTIME minutes
+    # */a means every a values
+    scheduler.add_job(turn_airwash, 'cron', hour='*/1', min=0, args=[ON])
+    scheduler.add_job(turn_airwash, 'cron', hour='*/1', min=AIRWASHTIME, args=[OFF])
+
+    return scheduler
 
 def main():
     load_dotenv()
@@ -212,19 +230,23 @@ def main():
     retry_count = 0
     while retry_count < 3:
         try:
-            client = init_client()
-            client.connect(SERVER_IP)
-            sn.send_notification("System Notification", "Starting Hyoja RPI")
+            mqtt_client = init_client()
+            scheduler = BackgroundScheduler(timezone='Asia/Seoul')
+            scheduler = add_lightcontrol(scheduler, mqtt_client)
+            scheduler = add_airwashcontrol(scheduler)
+
+            mqtt_client.connect(SERVER_IP)
+            sn.send_notification("System Notification", "Hyoja System Initiated")
         except Exception as e:
             logging.debug("Client Init Failed\n{}".format(e))
             sn.send_notification("Error", "Could not connect to MQTT server. Count {}".format(retry_count))
-            retry_count +=1
+            retry_count += 1
+
         try:
             retry_count = 0
-            humitemp_control = Process(target=client.loop_forever)
-            airwash_control = Process(target=process_airwash)
-            humitemp_control.start()
-            airwash_control.start()
+            mqtt_client.loop_forever()
+            scheduler.start()
+            
         except Exception as e:
             logging.debug("Client Loop Exited\n{}".format(e))
             sn.send_notification("Error", "RPI Stopped Due to Following Error\n{}\nRestarting ...".format(e))
