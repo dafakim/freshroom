@@ -192,8 +192,8 @@ def main():
     scheduler.add_job(pulse_for_data, 'interval', seconds=30, args=[client])
     sn.send_notification("System Notification", "Starting Hyoja RPI at {}".format(datetime.now(timezone('Asia/Seoul'))))
     try:
-        client.loop_forever()
         scheduler.start()
+        client.loop_forever()
     except Exception as e:
         print(e)
         logging.debug(e)
