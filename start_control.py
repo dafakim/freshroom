@@ -169,6 +169,7 @@ def _on_message(client, userdata, msg):
         _process_humi(client, location, split_msg)
     else:
         pass
+    print(topic, location, decoded_msg)
     _process_airwash()
     _process_light(client)
 
