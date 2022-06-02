@@ -1,6 +1,10 @@
+from argparse import Action
+from ctypes import py_object
 import logging
 import json
 import os
+from tempfile import tempdir
+from tkinter.filedialog import askdirectory
 import traceback
 from datetime import datetime
 from multiprocessing import Process
@@ -19,21 +23,29 @@ import slack_notifier as sn
 
 logging.basicConfig(filename = "debug.log", level=logging.DEBUG)
 
-
-AIRWASHTIME = 5
-HUMHIGH = 85
-HUMLOW = 80
-LIGHTSTARTTIME = 8
-LIGHTENDTIME = 0
+# make a separate config file to contain the following global variables & make a config listening logic
 ON = 1
 OFF = 0
+# for ON and OFF make a separate class with on, off as enumerations
+AIRWASHTIME = 5
+
+LIGHTSTARTTIME = 8
+LIGHTENDTIME = 0
+
+HUMHIGH = 85
+HUMLOW = 80
+
 TEMPHIGH = 12
 TEMPLOW = 8
+
 WRONGMSGCOUNT = 0
+
 EVENT_TYPE_HUMIDITY = "humidity"
 EVENT_TYPE_TEMPERATURE = "temperature"
+
 HUMIDIFIER_CONTROL_CHANNEL = "hyoja/humidifierStatus"
 LIGHT_CONTROL_CHANNEL = "hyoja/lightStatus"
+
 
 class FormatError(Exception):
     def __init__(self, msg):
@@ -42,6 +54,14 @@ class FormatError(Exception):
 class ZeroDataError(Exception):
     def __init__(self, msg):
         super().__init__(msg)
+
+'''
+class FreshroomMQTTClient(object):
+    mqtt_client
+    scheduler
+
+    listener
+'''
 
 def _process_temperature_data(location, data_list):
     #time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
@@ -102,32 +122,6 @@ def _process_humidity_data(location, data_list, client):
             json_body[0]["fields"]["action"] = ON
         else:
             pass
-        '''
-        try:
-            humidifier = airhumidifier_mjjsq.AirHumidifierMjjsq(ip=os.getenv('HUMIDIFIER_IP'), token=os.getenv('HUMIDIFIER_TOKEN'))
-            is_on = humidifier.status().is_on
-        except DeviceException as e:
-            print(e)
-        if humidifier.status().no_water:
-            logging.error("HUMIDIFIER NO WATER, PLEASE FILL ASAP")
-            if is_on:
-                humidifier.off()
-            else:
-                pass
-            return -1
-        total = 0
-        for i in range(len(msg)):
-            logging.debug("Sensor: {}, Value: {}".format(i, msg[i]))
-            total += float(msg[i])
-        avg = total/len(msg)
-        if avg > HUMHIGH and is_on:
-            # turn off humidifier
-            humidifier.off()
-        elif avg < HUMLOW and not is_on:
-            # turn on humidifier
-            humidifier.on()
-        json_body[0]["fields"]["action"] = humidifier.status().is_on
-        '''
     else:
         raise ZeroDataError("Humidity data has 0")
     dbm.db_insert(location, json_body)
@@ -169,6 +163,8 @@ def _parse_payload(payload):
     if "," in payload:
         data1, data2 = payload.split(",")
         data_list = [float(data1), float(data2)]
+
+        return data_list
     else:
         raise FormatError("Payload Invalid.\nReceived Payload: {}".format(payload))
     # split by ,
@@ -180,6 +176,8 @@ def _decode_msg(msg):
     if "/" in msg.topic:
         location, sensor_type = msg.topic.split("/")
         decoded_payload = msg.payload.decode("utf-8")
+
+        return location, sensor_type, decoded_payload
     else:
         raise FormatError("Message Topic Invalid.\nReceived Message: {}".format(msg))
 
@@ -216,16 +214,12 @@ def add_lightcontrol(scheduler, client):
     scheduler.add_job(turn_light, 'cron', hour=LIGHTSTARTTIME, min=0, args=[ON, client])
     scheduler.add_job(turn_light, 'cron', hour=LIGHTENDTIME, min=0, args=[OFF, client])
 
-    return scheduler
-
 def add_airwashcontrol(scheduler):
     # add start and end schedules for air wash
     # turn on every hour for AIRWASHTIME minutes
     # */a means every a values
     scheduler.add_job(turn_airwash, 'cron', hour='*/1', min=0, args=[ON])
     scheduler.add_job(turn_airwash, 'cron', hour='*/1', min=AIRWASHTIME, args=[OFF])
-
-    return scheduler
 
 def main():
     load_dotenv()
@@ -235,11 +229,28 @@ def main():
     while retry_count < 3:
         try:
             mqtt_client = init_client()
-            scheduler = BackgroundScheduler(timezone='Asia/Seoul')
-
             mqtt_client.connect(SERVER_IP)
-            scheduler = add_lightcontrol(scheduler, mqtt_client)
-            scheduler = add_airwashcontrol(scheduler)
+            '''
+            Actor, Monitor
+
+            Actor --> Action
+                => set humidity
+                => set temp
+                => set light
+                => set airwash
+
+            <Actor trigger>
+                
+            Monitor --> take in values, call <actor trigger>
+                --> Recorder 로 기록
+                --> 필요시 action trigger
+            BackgroundScheduler -> call <actor trigger>
+                --> action trigger
+            '''
+
+            scheduler = BackgroundScheduler(timezone='Asia/Seoul')
+            add_lightcontrol(scheduler, mqtt_client)
+            add_airwashcontrol(scheduler)
             sn.send_notification("System Notification", "Hyoja System Initiated")
         except Exception as e:
             logging.debug("Client Init Failed\n{}".format(e))
