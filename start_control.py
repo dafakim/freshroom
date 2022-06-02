@@ -259,8 +259,8 @@ def main():
 
         try:
             retry_count = 0
-            mqtt_client.loop_forever()
             scheduler.start()
+            mqtt_client.loop_forever()
         except Exception as e:
             logging.debug("Client Loop Exited\n{}".format(e))
             sn.send_notification("Error", "RPI Stopped Due to Following Error\n{}\nRestarting ...".format(e))
