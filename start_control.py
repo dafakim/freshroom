@@ -167,6 +167,8 @@ def _on_message(client, userdata, msg):
         _process_temp(location, split_msg)
     elif "humidity" in sensor_type:
         _process_humi(client, location, split_msg)
+    elif "lightStatus" in sensor_type:
+        return 0
     else:
         pass
     print(topic, location, decoded_msg)
