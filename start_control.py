@@ -1,3 +1,4 @@
+from sched import scheduler
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 import os
@@ -9,6 +10,7 @@ import slack_notifier as sn
 import db_manager as dbm
 from tapo_plug import tapoPlugApi
 import json
+from apscheduler.schedulers.background import BackgroundScheduler
 
 logging.basicConfig(filename = 'debug.log', level=logging.DEBUG)
 
@@ -175,6 +177,9 @@ def _on_message(client, userdata, msg):
     _process_airwash()
     _process_light(client)
 
+def pulse_for_data(client):
+    client.publish("hyoja/dataRequest", 1)
+
 def main():
     load_dotenv()
     client = mqtt.Client('M1')
@@ -182,9 +187,13 @@ def main():
     client.on_connect = _on_connect
     client.on_message = _on_message
     client.connect(os.getenv('IP'))
+
+    scheduler = BackgroundScheduler(timezone="Asia/Seoul")
+    scheduler.add_job(pulse_for_data, 'cron', sec='*/10', args=[client])
     sn.send_notification("System Notification", "Starting Hyoja RPI at {}".format(datetime.now(timezone('Asia/Seoul'))))
     try:
         client.loop_forever()
+        scheduler.start()
     except Exception as e:
         print(e)
         logging.debug(e)
