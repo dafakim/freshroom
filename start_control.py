@@ -11,6 +11,7 @@ import db_manager as dbm
 from tapo_plug import tapoPlugApi
 import json
 from apscheduler.schedulers.background import BackgroundScheduler
+import time
 
 logging.basicConfig(filename = 'debug.log', level=logging.DEBUG)
 
@@ -174,7 +175,9 @@ def _on_message(client, userdata, msg):
     else:
         pass
     print(topic, location, decoded_msg)
+    time.sleep(1)
     _process_airwash()
+    time.sleep(1)
     _process_light(client)
 
 def pulse_for_data(client):
