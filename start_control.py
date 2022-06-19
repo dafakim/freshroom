@@ -17,9 +17,9 @@ logging.basicConfig(filename = 'debug.log', level=logging.DEBUG)
 
 TEMPHIGH = 12
 TEMPLOW = 8
-HUMHIGH = 85
-HUMLOW = 80
-AIRWASHTIME = 5
+HUMHIGH = 95
+HUMLOW = 90
+AIRWASHTIME = 0 
 
 def _process_temp(location, msg):
     #time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
@@ -167,7 +167,8 @@ def _on_message(client, userdata, msg):
         split_msg = [decoded_msg]
     # disable temperature humidity controls until setup finished
     if "temperature" in sensor_type:
-        _process_temp(location, split_msg)
+        pass
+        #_process_temp(location, split_msg)
     elif "humidity" in sensor_type:
         _process_humi(client, location, split_msg)
     elif "lightStatus" in sensor_type:
