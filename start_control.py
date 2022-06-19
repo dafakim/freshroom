@@ -17,9 +17,9 @@ logging.basicConfig(filename = 'debug.log', level=logging.DEBUG)
 
 TEMPHIGH = 12
 TEMPLOW = 8
-HUMHIGH = 85
-HUMLOW = 80
-AIRWASHTIME = 1
+HUMHIGH = 95
+HUMLOW = 90
+AIRWASHTIME = 0 
 
 def _process_temp(location, msg):
     #time = datetime.strftime(datetime.now(), "%Y-%M-%D %H:%M:%S")
