@@ -192,7 +192,7 @@ def main():
     client.connect(os.getenv('IP'))
 
     scheduler = BackgroundScheduler(timezone="Asia/Seoul")
-    scheduler.add_job(pulse_for_data, 'interval', seconds=30, args=[client])
+    scheduler.add_job(pulse_for_data, 'interval', minutes=3, args=[client])
     sn.send_notification("System Notification", "Starting Hyoja RPI at {}".format(datetime.now(timezone('Asia/Seoul'))))
     try:
         scheduler.start()
