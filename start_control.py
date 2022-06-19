@@ -51,11 +51,13 @@ LIGHT_CONTROL_CHANNEL = "hyoja/lightStatus"
 
 class FormatError(Exception):
     def __init__(self, msg):
-        super().__init__(msg)
+        self.msg = msg
+        super().__init__(self.msg)
 
 class ZeroDataError(Exception):
     def __init__(self, msg):
-        super().__init__(msg)
+        self.msg = msg
+        super().__init__(self.msg)
 
 '''
 class FreshroomMQTTClient(object):
