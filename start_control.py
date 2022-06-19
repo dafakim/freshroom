@@ -42,7 +42,9 @@ WRONGMSGCOUNT = 0
 
 EVENT_TYPE_HUMIDITY = "humidity"
 EVENT_TYPE_TEMPERATURE = "temperature"
+EVENT_TYPE_LIGHT = "light"
 
+DATA_REQUEST_CHANNEL = "hyoja/dataRequest"
 HUMIDIFIER_CONTROL_CHANNEL = "hyoja/humidifierStatus"
 LIGHT_CONTROL_CHANNEL = "hyoja/lightStatus"
 
@@ -155,6 +157,9 @@ def turn_airwash(state):
             print(e)
             sn.send_notification("Error", "Could not turn off airwash")
 
+def request_data(client):
+    client.publish(DATA_REQUEST_CHANNEL, 1)
+
 def _on_connect(client, userdata, flags, rc):
     print("Connected with code" + str(rc))
     client.subscribe('#')
@@ -189,6 +194,8 @@ def _on_message(client, userdata, msg):
             _process_humidity_data(location, data_list, client)
         elif EVENT_TYPE_TEMPERATURE in sensor_type:
             _process_temperature_data(location, data_list)
+        elif EVENT_TYPE_LIGHT in sensor_type:
+            pass
         else:
             pass
     except FormatError as e:
@@ -209,17 +216,8 @@ def init_client():
 
     return client
 
-def add_lightcontrol(scheduler, client):
-    # add start and end control for lighting
-    scheduler.add_job(turn_light, 'cron', hour=LIGHTSTARTTIME, min=0, args=[ON, client])
-    scheduler.add_job(turn_light, 'cron', hour=LIGHTENDTIME, min=0, args=[OFF, client])
-
-def add_airwashcontrol(scheduler):
-    # add start and end schedules for air wash
-    # turn on every hour for AIRWASHTIME minutes
-    # */a means every a values
-    scheduler.add_job(turn_airwash, 'cron', hour='*/1', min=0, args=[ON])
-    scheduler.add_job(turn_airwash, 'cron', hour='*/1', min=AIRWASHTIME, args=[OFF])
+def add_datarequest_schedule(scheduler, client):
+    scheduler.add_job(request_data, 'interval', seconds=10, args=[client])
 
 def main():
     load_dotenv()
@@ -248,9 +246,8 @@ def main():
                 --> action trigger
             '''
 
-            scheduler = BackgroundScheduler(timezone='Asia/Seoul')
-            add_lightcontrol(scheduler, mqtt_client)
-            add_airwashcontrol(scheduler)
+            data_pulse_scheduler = BackgroundScheduler(timezone='Asia/Seoul')
+            add_datarequest_schedule(data_pulse_scheduler, mqtt_client)
             sn.send_notification("System Notification", "Hyoja System Initiated")
         except Exception as e:
             logging.debug("Client Init Failed\n{}".format(e))
@@ -259,7 +256,7 @@ def main():
 
         try:
             retry_count = 0
-            scheduler.start()
+            data_pulse_scheduler.start()
             mqtt_client.loop_forever()
         except Exception as e:
             logging.debug("Client Loop Exited\n{}".format(e))
