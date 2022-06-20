@@ -169,8 +169,7 @@ def _on_message(client, userdata, msg):
         split_msg = [decoded_msg]
     # disable temperature humidity controls until setup finished
     if "temperature" in sensor_type:
-        pass
-        #_process_temp(location, split_msg)
+        _process_temp(location, split_msg)
     elif "humidity" in sensor_type:
         _process_humi(client, location, split_msg)
     elif "lightStatus" in sensor_type:
