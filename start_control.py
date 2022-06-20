@@ -35,6 +35,7 @@ def _process_temp(location, msg):
                 }
             }
         ]
+        '''
         heater = heater_miot.HeaterMiot(ip=os.getenv('HEATER_IP'), token=os.getenv('HEATER_TOKEN'))
         is_on = heater.status().is_on
         total = 0
@@ -47,6 +48,7 @@ def _process_temp(location, msg):
         elif avg < TEMPLOW and not is_on:
             heater.on()
         json_body[0]["fields"]["action"] = heater.status().is_on
+        '''
     else:
         json_body = [
             {
