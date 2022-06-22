@@ -147,7 +147,9 @@ def _process_light(client):
         print("turning light off")
         client.publish("hyoja/lightStatus", 0)
 
-
+def _process_co2(client, msg):
+    print("current co2 level: {}".format(msg))
+    
 
 def _on_connect(client, userdata, flags, rc):
     print("Connected with code" + str(rc))
@@ -174,6 +176,8 @@ def _on_message(client, userdata, msg):
         _process_humi(client, location, split_msg)
     elif "lightStatus" in sensor_type:
         return 0
+    elif "CO2" in sensor_type:
+        _process_co2(client, split_msg)
     else:
         pass
     print(topic, location, decoded_msg)
