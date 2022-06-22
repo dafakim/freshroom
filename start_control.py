@@ -1,4 +1,3 @@
-from sched import scheduler
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 import os
@@ -63,7 +62,6 @@ def _process_temp(location, msg):
 
 def _process_humi(client, location, msg):
 
-
     if len(msg) > 1:
         json_body = [
             {
@@ -86,7 +84,7 @@ def _process_humi(client, location, msg):
             else:
                 pass
             return -1
-        '''
+        
         total = 0
         for i in range(len(msg)):
             logging.debug("Sensor: {}, Value: {}".format(i, msg[i]))
@@ -102,6 +100,15 @@ def _process_humi(client, location, msg):
             #humidifier.on()
             print("Turning humidifier on")
             client.publish("hyoja/humidifierStatus", 1)
+        '''
+        minute_now = datetime.now().minute
+        if minute_now % 10 == 0:
+            print("Turning humidifier on")
+            client.publish("hyoja/humidifierStatus", 1)
+            json_body[0]["fields"]["action"] = True
+        else:
+            print("Turning humidifier off")
+            client.publish("hyoja/humidifierStatus", 0)
         # json_body[0]["fields"]["action"] = 
     else:
         json_body = [
@@ -198,7 +205,7 @@ def main():
     client.connect(os.getenv('IP'))
 
     scheduler = BackgroundScheduler(timezone="Asia/Seoul")
-    scheduler.add_job(pulse_for_data, 'cron', minute='0-1, 10-11, 20-21, 30-31, 40-41, 50-51', args=[client])
+    scheduler.add_job(pulse_for_data, 'interval', minutes=1, args=[client])
     sn.send_notification("System Notification", "Starting Hyoja RPI at {}".format(datetime.now(timezone('Asia/Seoul'))))
     try:
         scheduler.start()
