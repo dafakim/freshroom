@@ -102,7 +102,7 @@ def _process_humi(client, location, msg):
             client.publish("hyoja/humidifierStatus", 1)
         '''
         minute_now = datetime.now().minute
-        if minute_now % 10 == 0:
+        if minute_now % 20 == 0:
             print("Turning humidifier on")
             client.publish("hyoja/humidifierStatus", 1)
             json_body[0]["fields"]["action"] = True
