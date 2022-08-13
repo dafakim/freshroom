@@ -33,4 +33,5 @@ config = {"temperature_threshold": [20, 25],
 "led_time": [22, 7],
 "air_flush_time": [15, 5]}
 new_config = json.dumps(config)
+print("publishing new config\n{}".format(new_config))
 mqtt_client.publish(PATCH_CONFIG_CHANNEL, new_config)
