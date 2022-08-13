@@ -43,6 +43,9 @@ class ZeroDataError(Exception):
     """ catch no data coming in through subscribed topics"""
 
 
+def send_new_condition(client, new_condition):
+    client.publish(RUNNING_CONDITION_CHANNEL, new_condition)
+
 def _handle_topic_payload(location, topic, payload):
     values = json.loads(payload)
     print("From {} in {}".format(location, topic))
