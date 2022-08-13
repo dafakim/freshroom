@@ -1,11 +1,18 @@
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
+import os 
 
 from system_monitor import send_new_condition
 
 
 PATCH_CONFIG_CHANNEL = "hyoja/condition_patch_note"
 
+def _on_connect(client, userdata, flags, rc):
+    print("Connected with code" + str(rc))
+    client.subscribe('#')
+
+def _on_message(client, userdata, msg):
+    print(msg)
 
 def init_client(MQTT_SERVER_IP):
     # populate type_to_processor with valid processor instances
