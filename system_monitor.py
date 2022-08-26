@@ -1,7 +1,7 @@
 import json
 import logging
 import os
-from datetime import datetime
+import datetime
 
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
@@ -13,6 +13,8 @@ import slack_notifier as sn
 logging.basicConfig(filename = "debug.log", level=logging.DEBUG)
 
 
+KST = datetime.timezone(datetime.timedelta(hours=9))
+LOCATION = "hyoja"
 # make a separate config file to contain the following global variables & make a config listening logic
 ON = 1
 OFF = 0
@@ -33,6 +35,9 @@ WRONGMSGCOUNT = 0
 EVENT_TYPE_STATUS = "status"
 EVENT_TYPE_CONDITION = "condition"
 
+VALUE_TYPE_TEMPERATURE = "temperature"
+VALUE_TYPE_HUMIDITY = "humidity"
+
 RUNNING_CONDITION_CHANNEL = "hyoja/running_condition"
 
 
@@ -42,6 +47,30 @@ class FormatError(Exception):
 class ZeroDataError(Exception):
     """ catch no data coming in through subscribed topics"""
 
+def _log_value(value_json):
+    json_string = json.dumps(value_json)
+    db_name = LOCATION
+    dbm.insert(db_name, json_string)
+
+def _log_temperature(values):
+    t1 = values[0]
+    t2 = values[1]
+    value_json = {
+        "T1": t1,
+        "T2": t2,
+        "time": datetime.datetime.now(KST)
+    }
+    _log_value(value_json)
+
+def _log_humidity(values):
+    h1 = values[0]
+    h2 = values[1]
+    value_json = {
+        "H1": h1,
+        "H2": h2,
+        "time": datetime.datetime.now(KST))
+    }
+    _log_value(value_json)
 
 def send_new_condition(client, new_condition):
     client.publish(RUNNING_CONDITION_CHANNEL, new_condition)
@@ -50,7 +79,12 @@ def _handle_topic_payload(location, topic, payload):
     values = json.loads(payload)
     print("From {} in {}".format(location, topic))
     for value in values:
-        print(value, values[value])
+        if VALUE_TYPE_TEMPERATURE in value:
+            _log_temperature(values[value])
+        elif VALUE_TYPE_HUMIDITY in value:
+            _log_humidity(values[value])
+        else:
+            pass
 
 def _handle_condition_payload(location, payload):
     # payload is a string in json format
@@ -82,6 +116,8 @@ def _on_message(client, userdata, msg):
             _handle_topic_payload(location, topic, payload)
         elif EVENT_TYPE_CONDITION in topic:
             _handle_condition_payload(location, payload)
+        else:
+            pass
     except FormatError as e:
         # send message and ignore current message
         sn.send_notification("", e)
