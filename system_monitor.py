@@ -56,8 +56,11 @@ def _log_temperature(values):
     t1 = float(values[0])
     t2 = float(values[1])
     value_json = {
-        "T1": t1,
-        "T2": t2,
+        "measurement": VALUE_TYPE_TEMPERATURE,
+        "fields": {
+            "T1": t1,
+            "T2": t2,
+        },
         "time": datetime.datetime.now(KST)
     }
     print("Temperature is {}, {}".format(t1, t2))
@@ -67,8 +70,11 @@ def _log_humidity(values):
     h1 = float(values[0])
     h2 = float(values[1])
     value_json = {
-        "H1": h1,
-        "H2": h2,
+        "measurement": VALUE_TYPE_HUMIDITY,
+        "fields": {
+            "T1": h1,
+            "T2": h2,
+        },
         "time": datetime.datetime.now(KST)
     }
     print("Humidity is {}, {}".format(h1, h2))
