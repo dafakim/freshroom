@@ -68,7 +68,7 @@ def _log_humidity(values):
     value_json = {
         "H1": h1,
         "H2": h2,
-        "time": datetime.datetime.now(KST))
+        "time": datetime.datetime.now(KST)
     }
     _log_value(value_json)
 
