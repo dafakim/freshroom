@@ -53,8 +53,8 @@ def _log_value(value_json):
     dbm.insert(db_name, json_string)
 
 def _log_temperature(values):
-    t1 = values[0]
-    t2 = values[1]
+    t1 = float(values[0])
+    t2 = float(values[1])
     value_json = {
         "T1": t1,
         "T2": t2,
@@ -64,8 +64,8 @@ def _log_temperature(values):
     _log_value(value_json)
 
 def _log_humidity(values):
-    h1 = values[0]
-    h2 = values[1]
+    h1 = float(values[0])
+    h2 = float(values[1])
     value_json = {
         "H1": h1,
         "H2": h2,
