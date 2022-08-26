@@ -60,6 +60,7 @@ def _log_temperature(values):
         "T2": t2,
         "time": datetime.datetime.now(KST)
     }
+    print("Temperature is {}, {}".format(t1, t2))
     _log_value(value_json)
 
 def _log_humidity(values):
@@ -70,6 +71,7 @@ def _log_humidity(values):
         "H2": h2,
         "time": datetime.datetime.now(KST)
     }
+    print("Humidity is {}, {}".format(h1, h2))
     _log_value(value_json)
 
 def send_new_condition(client, new_condition):
