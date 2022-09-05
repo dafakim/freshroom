@@ -50,7 +50,7 @@ class ZeroDataError(Exception):
 def _log_value(value_json):
     json_string = json.dumps(value_json, default=str)
     db_name = LOCATION
-    dbm.insert(db_name, json_string)
+    dbm.db_insert(db_name, json_string)
 
 def _log_temperature(values):
     t1 = float(values[0])
