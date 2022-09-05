@@ -50,7 +50,7 @@ class ZeroDataError(Exception):
 def _log_value(value_json):
     db_name = LOCATION
     try:
-        dbm.db_insert(db_name, json_string)
+        dbm.db_insert(db_name, value_json)
     except Exception as e:
         print(e)
 
