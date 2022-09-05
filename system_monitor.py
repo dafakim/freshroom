@@ -48,7 +48,6 @@ class ZeroDataError(Exception):
     """ catch no data coming in through subscribed topics"""
 
 def _log_value(value_json):
-    json_string = json.dumps(value_json)
     db_name = LOCATION
     try:
         dbm.db_insert(db_name, json_string)
