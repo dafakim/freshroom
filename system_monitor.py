@@ -24,8 +24,8 @@ AIRWASHTIME = 5
 LIGHTSTARTTIME = 8
 LIGHTENDTIME = 0
 
-HUMHIGH = 85
-HUMLOW = 80
+HUMHIGH = 92
+HUMLOW = 88
 
 TEMPHIGH = 12
 TEMPLOW = 8
@@ -48,7 +48,7 @@ class ZeroDataError(Exception):
     """ catch no data coming in through subscribed topics"""
 
 def _log_value(value_json):
-    json_string = json.dumps(value_json)
+    json_string = json.dumps(value_json, default=str)
     db_name = LOCATION
     dbm.insert(db_name, json_string)
 
@@ -84,15 +84,18 @@ def send_new_condition(client, new_condition):
     client.publish(RUNNING_CONDITION_CHANNEL, new_condition)
 
 def _handle_topic_payload(location, topic, payload):
-    values = json.loads(payload)
-    print("From {} in {}".format(location, topic))
-    for value in values:
-        if VALUE_TYPE_TEMPERATURE in value:
-            _log_temperature(values[value])
-        elif VALUE_TYPE_HUMIDITY in value:
-            _log_humidity(values[value])
-        else:
-            pass
+    if "null" == payload:
+        pass
+    else:
+        values = json.loads(payload)
+        print(values)
+        for value in values:
+            if VALUE_TYPE_TEMPERATURE in value:
+                _log_temperature(values[value])
+            elif VALUE_TYPE_HUMIDITY in value:
+                _log_humidity(values[value])
+            else:
+                pass
 
 def _handle_condition_payload(location, payload):
     # payload is a string in json format
