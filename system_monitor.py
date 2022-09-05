@@ -61,7 +61,7 @@ def _log_temperature(values):
             "T1": t1,
             "T2": t2,
         },
-        "time": datetime.datetime.now(KST)
+        "time": str(datetime.datetime.now(KST))
     }
     print("Temperature is {}, {}".format(t1, t2))
     _log_value(value_json)
@@ -75,7 +75,7 @@ def _log_humidity(values):
             "T1": h1,
             "T2": h2,
         },
-        "time": datetime.datetime.now(KST)
+        "time": str(datetime.datetime.now(KST))
     }
     print("Humidity is {}, {}".format(h1, h2))
     _log_value(value_json)
