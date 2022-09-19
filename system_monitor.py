@@ -24,8 +24,8 @@ AIRWASHTIME = 5
 LIGHTSTARTTIME = 8
 LIGHTENDTIME = 0
 
-HUMHIGH = 85
-HUMLOW = 80
+HUMHIGH = 92
+HUMLOW = 88
 
 TEMPHIGH = 12
 TEMPLOW = 8
@@ -48,35 +48,41 @@ class ZeroDataError(Exception):
     """ catch no data coming in through subscribed topics"""
 
 def _log_value(value_json):
-    json_string = json.dumps(value_json)
     db_name = LOCATION
-    dbm.insert(db_name, json_string)
+    try:
+        dbm.db_insert(db_name, value_json)
+    except Exception as e:
+        print(e)
 
 def _log_temperature(values):
     t1 = float(values[0])
     t2 = float(values[1])
-    value_json = {
-        "measurement": VALUE_TYPE_TEMPERATURE,
-        "fields": {
-            "T1": t1,
-            "T2": t2,
-        },
-        "time": datetime.datetime.now(KST)
-    }
+    value_json = [
+        {
+            "measurement": VALUE_TYPE_TEMPERATURE,
+            "fields": {
+                "T1": t1,
+                "T2": t2,
+            },
+            "time": str(datetime.datetime.now(KST))
+        }
+    ]
     print("Temperature is {}, {}".format(t1, t2))
     _log_value(value_json)
 
 def _log_humidity(values):
     h1 = float(values[0])
     h2 = float(values[1])
-    value_json = {
-        "measurement": VALUE_TYPE_HUMIDITY,
-        "fields": {
-            "T1": h1,
-            "T2": h2,
-        },
-        "time": datetime.datetime.now(KST)
-    }
+    value_json = [
+        {
+            "measurement": VALUE_TYPE_HUMIDITY,
+            "fields": {
+                "H1": h1,
+                "H2": h2,
+            },
+            "time": str(datetime.datetime.now(KST))
+        }
+    ]
     print("Humidity is {}, {}".format(h1, h2))
     _log_value(value_json)
 
@@ -84,15 +90,18 @@ def send_new_condition(client, new_condition):
     client.publish(RUNNING_CONDITION_CHANNEL, new_condition)
 
 def _handle_topic_payload(location, topic, payload):
-    values = json.loads(payload)
-    print("From {} in {}".format(location, topic))
-    for value in values:
-        if VALUE_TYPE_TEMPERATURE in value:
-            _log_temperature(values[value])
-        elif VALUE_TYPE_HUMIDITY in value:
-            _log_humidity(values[value])
-        else:
-            pass
+    if "null" == payload:
+        pass
+    else:
+        values = json.loads(payload)
+        print(values)
+        for value in values:
+            if VALUE_TYPE_TEMPERATURE in value:
+                _log_temperature(values[value])
+            elif VALUE_TYPE_HUMIDITY in value:
+                _log_humidity(values[value])
+            else:
+                pass
 
 def _handle_condition_payload(location, payload):
     # payload is a string in json format
