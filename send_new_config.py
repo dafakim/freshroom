@@ -1,10 +1,16 @@
-import paho.mqtt.client as mqtt
-from dotenv import load_dotenv
-import os 
+import argparse
 import json
+import os 
+import paho.mqtt.client as mqtt
 
+from dotenv import load_dotenv
 from system_monitor import send_new_condition
 
+list_tp = lambda x:list(map(int, x.split(',')))
+parser = argparse.ArgumentParser(description="Send a new configuration to ESP boards in the same mqtt channel")
+parser.add_argument('-t', '--temperature', type=list_tp, default=[20,25])
+parser.add_argument('-h', '--humidity', type=list_tp, default=[8,12])
+args = parser.parse_args()
 
 PATCH_CONFIG_CHANNEL = "hyoja/condition_patch_note"
 
@@ -28,8 +34,8 @@ load_dotenv()
 MQTT_SERVER_IP = os.getenv('IP')
 mqtt_client = init_client(MQTT_SERVER_IP)
 
-config = {"temperature_threshold": [20, 25],
-"humidity_threshold": [90, 85],
+config = {"temperature_threshold": args.temperature,
+"humidity_threshold": args.humidity,
 "led_time": [22, 7],
 "air_flush_time": [15, 5]}
 new_config = json.dumps(config)
