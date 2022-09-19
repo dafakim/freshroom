@@ -19,8 +19,8 @@ LOCATION = "hyoja"
 ON = 1
 OFF = 0
 # for ON and OFF make a separate class with on, off as enumerations
-AIRWASHDURATION = 5
-AIRWASHINTERVAL = 60
+AIRWASHDURATION = 2
+AIRWASHINTERVAL = 20
 
 LIGHTSTARTTIME = 8
 LIGHTENDTIME = 0
@@ -160,9 +160,9 @@ def _on_message(client, userdata, msg):
         else:
             pass
         now_min = datetime.datetime.now().minute
-        if now_min == 0 or now_min == 1:
+        if now_min%AIRWASHINTERVAL == 0 or now_min%AIRWASHINTERVAL == 1:
             _flush_air(True)
-        elif now_min == AIRWASHDURATION or now_min == AIRWASHDURATION + 1:
+        elif now_min%AIRWASHINTERVAL == AIRWASHDURATION or now_min%AIRWASHINTERVAL == AIRWASHDURATION + 1:
             _flush_air(False)
         else:
             pass
