@@ -9,7 +9,7 @@ from system_monitor import send_new_condition
 list_tp = lambda x:list(map(int, x.split(',')))
 parser = argparse.ArgumentParser(description="Send a new configuration to ESP boards in the same mqtt channel")
 parser.add_argument('-t', '--temperature', type=list_tp, default=[20,25])
-parser.add_argument('-h', '--humidity', type=list_tp, default=[8,12])
+parser.add_argument('-hu', '--humidity', type=list_tp, default=[8,12])
 args = parser.parse_args()
 
 PATCH_CONFIG_CHANNEL = "hyoja/condition_patch_note"
