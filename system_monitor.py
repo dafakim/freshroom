@@ -1,13 +1,13 @@
+import datetime
+import db_manager as dbm
 import json
 import logging
 import os
-import datetime
-
 import paho.mqtt.client as mqtt
-from dotenv import load_dotenv
-
-import db_manager as dbm
 import slack_notifier as sn
+
+from dotenv import load_dotenv
+from tapo_plug import tapoPlugApi
 
 
 logging.basicConfig(filename = "debug.log", level=logging.DEBUG)
@@ -19,7 +19,8 @@ LOCATION = "hyoja"
 ON = 1
 OFF = 0
 # for ON and OFF make a separate class with on, off as enumerations
-AIRWASHTIME = 5
+AIRWASHDURATION = 5
+AIRWASHINTERVAL = 60
 
 LIGHTSTARTTIME = 8
 LIGHTENDTIME = 0
@@ -40,6 +41,11 @@ VALUE_TYPE_HUMIDITY = "humidity"
 
 RUNNING_CONDITION_CHANNEL = "hyoja/running_condition"
 
+tapo_device = {
+    "tapoIp": "192.168.0.25",
+    "tapoEmail": "wbyim7160@gmail.com",
+    "tapoPassword": "mushfresh2022"
+}
 
 class FormatError(Exception):
     """ catch format errors in either payload or messages from subscribed topics """
@@ -111,6 +117,24 @@ def _handle_condition_payload(location, payload):
     for condition in conditions:
         print(condition, conditions[condition])
 
+def _flush_air(status):
+    value_json = [
+        {
+            "measurement": "air_flush_action",
+            "fields": {
+                "action": True
+            },
+            "time": str(datetime.datetime.now(KST))
+        }
+    ]
+    if status:
+        res = tapoPlugApi.plugOn(tapo_device)
+    else:
+        res = tapoPlugApi.plugOff(tapo_device)
+        value_json["fields"]["action"] = False
+    _log_value(value_json)
+    
+
 def _decode_msg(msg):
     # check msg validity
     if "/" in msg.topic:
@@ -133,6 +157,13 @@ def _on_message(client, userdata, msg):
             _handle_topic_payload(location, topic, payload)
         elif EVENT_TYPE_CONDITION in topic:
             _handle_condition_payload(location, payload)
+        else:
+            pass
+        now_min = datetime.datetime.now().minute
+        if now_min == 0 or now_min == 1:
+            _flush_air(True)
+        elif now_min == AIRWASHDURATION or now_min == AIRWASHDURATION + 1:
+            _flush_air(False)
         else:
             pass
     except FormatError as e:
