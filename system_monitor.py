@@ -147,7 +147,7 @@ def _flush_air(status):
         res = tapo_device_airflush.turn_on()
     else:
         res = tapo_device_airflush.turn_off()
-        value_json["fields"]["action"] = False
+        value_json[0]["fields"]["action"] = False
     print("airflush status is {}".format(res))
     _log_value(value_json)
     
