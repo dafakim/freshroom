@@ -7,7 +7,6 @@ import paho.mqtt.client as mqtt
 import slack_notifier as sn
 
 from dotenv import load_dotenv
-from tapo_plug import tapoPlugApi
 from tapo_plug_controller import Tapo_device
 
 
@@ -177,10 +176,8 @@ def _on_message(client, userdata, msg):
         now_min = datetime.datetime.now().minute
         if now_min%AIRWASHINTERVAL == 0 or now_min%AIRWASHINTERVAL == 1:
             _flush_air(True)
-        elif now_min%AIRWASHINTERVAL == AIRWASHDURATION or now_min%AIRWASHINTERVAL == AIRWASHDURATION + 1:
-            _flush_air(False)
         else:
-            pass
+            _flush_air(False)
     except FormatError as e:
         # send message and ignore current message
         sn.send_notification("", e)
