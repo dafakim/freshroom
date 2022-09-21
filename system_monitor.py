@@ -8,6 +8,7 @@ import slack_notifier as sn
 
 from dotenv import load_dotenv
 from tapo_plug import tapoPlugApi
+from tapo_plug_controller import tapo_device
 
 
 logging.basicConfig(filename = "debug.log", level=logging.DEBUG)
@@ -41,11 +42,8 @@ VALUE_TYPE_HUMIDITY = "humidity"
 
 RUNNING_CONDITION_CHANNEL = "hyoja/running_condition"
 
-tapo_device = {
-    "tapoIp": "192.168.0.25",
-    "tapoEmail": "wbyim7160@gmail.com",
-    "tapoPassword": "mushfresh2022"
-}
+tapo_device_airflush = tapo_device("192.168.0.25", "wbyim7160@gmail.com", "mushfresh2022")
+tapo_device_humidifier = tapo_device("192.168.0.17", "realkim93@gmail.com", "mushfresh1")
 
 class FormatError(Exception):
     """ catch format errors in either payload or messages from subscribed topics """
@@ -95,6 +93,19 @@ def _log_humidity(values):
 def send_new_condition(client, new_condition):
     client.publish(RUNNING_CONDITION_CHANNEL, new_condition)
 
+def _handle_humidity(humidity_values):
+    h1 = float(humidity_values[0])
+    h2 = float(humidity_values[0])
+    avg_humidity = (h1+h2)/2
+    res = ""
+    if avg_humidity < HUMLOW:
+        res = tapo_device_humidifier.turn_on()
+    elif avg_humidity > HUMHIGH:
+        res = tapo_device_humidifier.turn_off()
+    else:
+        pass
+    print("humidifier status is {}".format(res))
+
 def _handle_topic_payload(location, topic, payload):
     if "null" == payload:
         pass
@@ -103,8 +114,10 @@ def _handle_topic_payload(location, topic, payload):
         print(values)
         for value in values:
             if VALUE_TYPE_TEMPERATURE in value:
+                #_handle_temperature(values[value])
                 _log_temperature(values[value])
             elif VALUE_TYPE_HUMIDITY in value:
+                _handle_humidity(values[value])
                 _log_humidity(values[value])
             else:
                 pass
@@ -118,6 +131,7 @@ def _handle_condition_payload(location, payload):
         print(condition, conditions[condition])
 
 def _flush_air(status):
+    res = ""
     value_json = [
         {
             "measurement": "air_flush_action",
@@ -128,10 +142,11 @@ def _flush_air(status):
         }
     ]
     if status:
-        res = tapoPlugApi.plugOn(tapo_device)
+        res = tapo_device_airflush.turn_on()
     else:
-        res = tapoPlugApi.plugOff(tapo_device)
+        res = tapo_device_airflush.turn_off()
         value_json["fields"]["action"] = False
+    print("airflush status is {}".format(res))
     _log_value(value_json)
     
 
