@@ -97,9 +97,12 @@ def _handle_humidity(humidity_values):
     h2 = float(humidity_values[0])
     avg_humidity = (h1+h2)/2
     res = ""
+    print("avg humidity", avg_humidity)
     if avg_humidity < HUMLOW:
+        print("turning humidifier on...")
         res = tapo_device_humidifier.turn_on()
     elif avg_humidity > HUMHIGH:
+        print("turning humidifier off...")
         res = tapo_device_humidifier.turn_off()
     else:
         pass
@@ -175,8 +178,10 @@ def _on_message(client, userdata, msg):
             pass
         now_min = datetime.datetime.now().minute
         if now_min%AIRWASHINTERVAL == 0 or now_min%AIRWASHINTERVAL == 1:
+            print("turning air flush on")
             _flush_air(True)
         else:
+            print("turning airflush off")
             _flush_air(False)
     except FormatError as e:
         # send message and ignore current message
