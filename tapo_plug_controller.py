@@ -24,5 +24,5 @@ class tapo_device:
         return self.device_status()
     
     def turn_off(self):
-        tapoPlugApi.plugOn(self.device_info)
+        tapoPlugApi.plugOff(self.device_info)
         return self.device_status()
