@@ -8,7 +8,7 @@ import slack_notifier as sn
 
 from dotenv import load_dotenv
 from tapo_plug import tapoPlugApi
-from tapo_plug_controller import tapo_device
+from tapo_plug_controller import Tapo_device
 
 
 logging.basicConfig(filename = "debug.log", level=logging.DEBUG)
@@ -42,8 +42,8 @@ VALUE_TYPE_HUMIDITY = "humidity"
 
 RUNNING_CONDITION_CHANNEL = "hyoja/running_condition"
 
-tapo_device_airflush = tapo_device("192.168.0.25", "wbyim7160@gmail.com", "mushfresh2022")
-tapo_device_humidifier = tapo_device("192.168.0.17", "realkim93@gmail.com", "mushfresh1")
+tapo_device_airflush = Tapo_device("192.168.0.25", "wbyim716@gmail.com", "mushfresh2022")
+tapo_device_humidifier = Tapo_device("192.168.0.17", "realkim93@gmail.com", "mushfresh1")
 
 class FormatError(Exception):
     """ catch format errors in either payload or messages from subscribed topics """
