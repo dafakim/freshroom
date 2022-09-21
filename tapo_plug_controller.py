@@ -3,7 +3,7 @@ import json
 from tapo_plug import tapoPlugApi
 
 
-class tapo_device:
+class Tapo_device:
     def __init__(self, ip, email, passwd):
         self.ip = ip
         self.email = email
