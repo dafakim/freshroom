@@ -20,7 +20,7 @@ ON = 1
 OFF = 0
 # for ON and OFF make a separate class with on, off as enumerations
 AIRWASHDURATION = 2
-AIRWASHINTERVAL = 20
+AIRWASHINTERVAL = 10
 
 LIGHTSTARTTIME = 8
 LIGHTENDTIME = 0
