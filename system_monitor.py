@@ -108,7 +108,6 @@ def _handle_humidity(humidity_values):
         res = tapo_device_humidifier.turn_off()
     else:
         CRITICAL_HUMIDITY_FLAG = False
-        pass
 
     critical_humidity = HUMLOW * 0.9
     if avg_humidity < critical_humidity:
