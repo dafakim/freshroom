@@ -41,6 +41,8 @@ VALUE_TYPE_HUMIDITY = "humidity"
 
 RUNNING_CONDITION_CHANNEL = "hyoja/running_condition"
 
+CRITICAL_HUMIDITY_FLAG = False
+
 tapo_device_airflush = Tapo_device("192.168.0.25", "wbyim716@gmail.com", "mushfresh2022")
 tapo_device_humidifier = Tapo_device("192.168.0.17", "realkim93@gmail.com", "mushfresh1")
 
@@ -105,11 +107,14 @@ def _handle_humidity(humidity_values):
         print("turning humidifier off...")
         res = tapo_device_humidifier.turn_off()
     else:
+        CRITICAL_HUMIDITY_FLAG = False
         pass
 
     critical_humidity = HUMLOW * 0.9
     if avg_humidity < critical_humidity:
-        sn.send_notification("System Critical: Low Humidity", "Humidity lower than critical threshold. Current humidity : {}".format(avg_humidity))
+        if not CRITICAL_HUMIDITY_FLAG:
+            CRITICAL_HUMIDITY_FLAG = True
+            sn.send_notification("System Critical: Low Humidity", "Humidity lower than critical threshold. Current humidity : {}".format(avg_humidity))
     print("humidifier status is {}".format(res))
 
 def _handle_topic_payload(location, topic, payload):
