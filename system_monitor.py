@@ -95,6 +95,7 @@ def send_new_condition(client, new_condition):
     client.publish(RUNNING_CONDITION_CHANNEL, new_condition)
 
 def _handle_humidity(humidity_values):
+    global CRITICAL_HUMIDITY_FLAG
     h1 = float(humidity_values[0])
     h2 = float(humidity_values[0])
     avg_humidity = (h1+h2)/2
