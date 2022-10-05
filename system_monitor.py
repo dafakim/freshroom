@@ -117,7 +117,7 @@ def _handle_humidity(humidity_values):
     print("humidifier status is {}".format(res))
 
 def _handle_topic_payload(location, topic, payload):
-    if "null" == payload:
+    if payload == "null":
         pass
     else:
         values = json.loads(payload)
@@ -135,10 +135,13 @@ def _handle_topic_payload(location, topic, payload):
 def _handle_condition_payload(location, payload):
     # payload is a string in json format
     # load string to python dictionary and print information
-    conditions = json.loads(payload)
-    print("From {}".format(location))
-    for condition in conditions:
-        print(condition, conditions[condition])
+    if payload == "null":
+        pass
+    else:
+        conditions = json.loads(payload)
+        print("From {}".format(location))
+        for condition in conditions:
+            print(condition, conditions[condition])
 
 def _flush_air(status):
     res = ""
