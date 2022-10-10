@@ -188,12 +188,13 @@ def _on_message(client, userdata, msg):
         else:
             pass
         now_min = datetime.datetime.now().minute
+        '''
         if now_min%AIRWASHINTERVAL == 0 or now_min%AIRWASHINTERVAL == 1:
             print("turning air flush on")
             _flush_air(True)
         else:
             print("turning airflush off")
-            _flush_air(False)
+            _flush_air(False)'''
     except FormatError as e:
         # send message and ignore current message
         sn.send_notification("", e)
