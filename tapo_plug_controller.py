@@ -15,9 +15,13 @@ class Tapo_device:
         }
 
     def device_status(self):
-        status = tapoPlugApi.getDeviceRunningInfo(self.device_info)
-        status = json.loads(status)
-        return status["result"]["device_on"]
+        try:
+            status = tapoPlugApi.getDeviceRunningInfo(self.device_info)
+            status = json.loads(status)
+            result = status["result"]["device_on"]
+        except:
+            result = "unreachable"
+        return result
 
     def turn_on(self):
         tapoPlugApi.plugOn(self.device_info)
