@@ -6,6 +6,7 @@ def send_notification(title, msg):
 	slack_data = {
 	"username": "StatusBot",
 	"icon_emoji": ":warning:",
+	"text": title,
 	"attachments": [
 		{
 		"fields": [

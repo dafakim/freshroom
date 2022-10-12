@@ -20,7 +20,7 @@ ON = 1
 OFF = 0
 # for ON and OFF make a separate class with on, off as enumerations
 AIRWASHDURATION = 2
-AIRWASHINTERVAL = 20
+AIRWASHINTERVAL = 10
 
 LIGHTSTARTTIME = 8
 LIGHTENDTIME = 0
@@ -41,6 +41,8 @@ VALUE_TYPE_HUMIDITY = "humidity"
 
 RUNNING_CONDITION_CHANNEL = "hyoja/running_condition"
 
+CRITICAL_HUMIDITY_FLAG = False
+
 tapo_device_airflush = Tapo_device("192.168.0.25", "wbyim716@gmail.com", "mushfresh2022")
 tapo_device_humidifier = Tapo_device("192.168.0.17", "realkim93@gmail.com", "mushfresh1")
 
@@ -52,10 +54,9 @@ class ZeroDataError(Exception):
 
 def _log_value(value_json):
     db_name = LOCATION
-    try:
-        dbm.db_insert(db_name, value_json)
-    except Exception as e:
-        print(e)
+    result = dbm.db_insert(db_name, value_json)
+    if not result:
+        raise Exception("DB Insertion Failed")
 
 def _log_temperature(values):
     t1 = float(values[0])
@@ -93,6 +94,7 @@ def send_new_condition(client, new_condition):
     client.publish(RUNNING_CONDITION_CHANNEL, new_condition)
 
 def _handle_humidity(humidity_values):
+    global CRITICAL_HUMIDITY_FLAG
     h1 = float(humidity_values[0])
     h2 = float(humidity_values[0])
     avg_humidity = (h1+h2)/2
@@ -105,11 +107,17 @@ def _handle_humidity(humidity_values):
         print("turning humidifier off...")
         res = tapo_device_humidifier.turn_off()
     else:
-        pass
+        CRITICAL_HUMIDITY_FLAG = False
+
+    critical_humidity = HUMLOW * 0.9
+    if avg_humidity < critical_humidity:
+        if not CRITICAL_HUMIDITY_FLAG:
+            CRITICAL_HUMIDITY_FLAG = True
+            sn.send_notification("System Critical: Low Humidity", "Humidity lower than critical threshold. Current humidity : {}".format(avg_humidity))
     print("humidifier status is {}".format(res))
 
 def _handle_topic_payload(location, topic, payload):
-    if "null" == payload:
+    if payload == "null":
         pass
     else:
         values = json.loads(payload)
@@ -127,10 +135,13 @@ def _handle_topic_payload(location, topic, payload):
 def _handle_condition_payload(location, payload):
     # payload is a string in json format
     # load string to python dictionary and print information
-    conditions = json.loads(payload)
-    print("From {}".format(location))
-    for condition in conditions:
-        print(condition, conditions[condition])
+    if payload == "null":
+        pass
+    else:
+        conditions = json.loads(payload)
+        print("From {}".format(location))
+        for condition in conditions:
+            print(condition, conditions[condition])
 
 def _flush_air(status):
     res = ""
@@ -177,12 +188,13 @@ def _on_message(client, userdata, msg):
         else:
             pass
         now_min = datetime.datetime.now().minute
+        '''
         if now_min%AIRWASHINTERVAL == 0 or now_min%AIRWASHINTERVAL == 1:
             print("turning air flush on")
             _flush_air(True)
         else:
             print("turning airflush off")
-            _flush_air(False)
+            _flush_air(False)'''
     except FormatError as e:
         # send message and ignore current message
         sn.send_notification("", e)
