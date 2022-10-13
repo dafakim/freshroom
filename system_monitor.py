@@ -169,7 +169,6 @@ def _decode_msg(msg):
         # topic from mqtt has location/topic. parse location and topic from the mqtt topic and return
         location, topic = msg.topic.split("/")
         decoded_payload = msg.payload.decode("utf-8")
-
         return location, topic, decoded_payload
     else:
         raise FormatError("Message Topic Invalid.\nReceived Message: {}".format(msg))
@@ -193,7 +192,7 @@ def _on_message(client, userdata, msg):
             _flush_air(True)
         else:
             print("turning airflush off")
-            _flush_air(False
+            _flush_air(False)
     except FormatError as e:
         # send message and ignore current message
         sn.send_notification("", e)
