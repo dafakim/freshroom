@@ -100,6 +100,7 @@ def _handle_humidity(humidity_values):
     avg_humidity = (h1+h2)/2
     res = ""
     print("avg humidity", avg_humidity)
+    '''
     if avg_humidity < HUMLOW:
         print("turning humidifier on...")
         res = tapo_device_humidifier.turn_on()
@@ -114,6 +115,7 @@ def _handle_humidity(humidity_values):
         if not CRITICAL_HUMIDITY_FLAG:
             CRITICAL_HUMIDITY_FLAG = True
             sn.send_notification("System Critical: Low Humidity", "Humidity lower than critical threshold. Current humidity : {}".format(avg_humidity))
+    '''
     print("humidifier status is {}".format(res))
 
 def _handle_topic_payload(location, topic, payload):
