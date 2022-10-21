@@ -193,6 +193,7 @@ def _on_message(client, userdata, msg):
         else:
             print("turning airflush off")
             _flush_air(False)
+        _flush_air(False)
     except FormatError as e:
         # send message and ignore current message
         sn.send_notification("", e)
